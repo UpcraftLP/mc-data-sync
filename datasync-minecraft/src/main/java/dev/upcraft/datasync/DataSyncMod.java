@@ -22,8 +22,7 @@ public class DataSyncMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(ModHelper.getMeta(MOD_ID).getName());
     public static final boolean HAS_INTERNET = checkInternetAccess();
 
-    public static final String API_URL = "https://sword-celebrities-selected-deborah.trycloudflare.com/api";
-//    public static final String API_URL = "http://localhost:5173/api";
+    public static final String API_URL = "https://datasync-api.uuid.gg/api";
     public static final ResourceLocation ENTITLEMENTS_ID = dataId("entitlements");
     public static final SyncToken<Entitlements> ENTITLEMENTS_TOKEN = DataSyncAPI.register(Entitlements.class, DataSyncMod.ENTITLEMENTS_ID, EntitlementsImpl.CODEC);
 

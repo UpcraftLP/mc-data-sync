@@ -1,5 +1,5 @@
 import { prisma } from '$lib/server/db.js';
-import type { UUID } from '$lib/types';
+import type { UUID } from 'crypto';
 
 interface RemoveUserEntitlementsInput {
     uuid: UUID;

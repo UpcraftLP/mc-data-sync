@@ -59,6 +59,47 @@ export const GET: RequestHandler = async ({ params }) => {
 }
 
 export const POST: RequestHandler = async ({ params, request }) => {
+
+    const auth = request.headers.get("Authorization");
+    
+    if(auth === null || !auth.startsWith("Bearer ")) {
+        return Response.json({
+            error: "Unauthorized"
+        }, {
+            status: 401
+        });
+    }
+
+    const sessionToken = auth.split(" ")[1];
+
+    const session = await prisma.session.findUnique({
+        where: {
+            id: sessionToken
+        },
+        include: {
+            user: {
+                select: {
+                    id: true
+                },
+                include: {
+                    entitlements: {
+                        select: {
+                            id: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if(session === null || session.user.id !== params.uuid) {
+        return Response.json({
+            error: "Unauthorized"
+        }, {
+            status: 401
+        });
+    }
+
     const id = `${params.namespace}:${params.path}`;
     if(id === ID_ENTITLEMENTS) {
         return Response.json({
@@ -79,28 +120,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
         });
     }
 
-    const user = await prisma.minecraftUser.findUnique({
-        where: {
-            id: params.uuid
-        },
-        include: {
-            entitlements: {
-                select: {
-                    id: true
-                }
-            }
-        }
-    });
-
-    if(user === null) {
-        return Response.json({
-            error: "User not found"
-        }, {
-            status: 404
-        });
-    }
-
-    if(user.entitlements.find(e => e.id === id) === undefined) {
+    if(session.user.entitlements.find(e => e.id === id) === undefined) {
         return Response.json({
             error: `User does not have entitlement ${id}`
         }, {
@@ -111,7 +131,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     await prisma.userConfigData.upsert({
         where: {
             minecraftUserId_entitlementId: {
-                minecraftUserId: params.uuid,
+                minecraftUserId: session.user.id,
                 entitlementId: id
             }
         },
@@ -120,7 +140,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
         },
         create: {
             entitlementId: id,
-            minecraftUserId: params.uuid,
+            minecraftUserId: session.user.id,
             value: rawInput,
         }
     });

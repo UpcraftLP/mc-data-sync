@@ -9,8 +9,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 
-import java.util.concurrent.CompletableFuture;
-
 @Environment(EnvType.CLIENT)
 public class DataSyncModClient implements ClientModInitializer {
 
@@ -24,8 +22,6 @@ public class DataSyncModClient implements ClientModInitializer {
             DataSyncMod.LOGGER.debug("Offline player detected, not preloading player data");
             return;
         }
-
-        CompletableFuture.runAsync(SESSION_STORE::login);
 
         DataSyncAPI.refreshAllPlayerData(profile.getId()).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to preload player data", t);

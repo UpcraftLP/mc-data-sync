@@ -118,8 +118,10 @@ java {
     withJavadocJar()
 
     toolchain {
-        languageVersion = JavaLanguageVersion.of(javaVersion)
-        vendor = JvmVendorSpec.MICROSOFT
+        if (JavaVersion.current() < JavaVersion.toVersion(javaVersion)) {
+            languageVersion = JavaLanguageVersion.of(javaVersion)
+            vendor = JvmVendorSpec.MICROSOFT
+        }
     }
 }
 

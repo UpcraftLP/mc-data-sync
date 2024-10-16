@@ -80,12 +80,14 @@ export const POST: RequestHandler = async ({ request }) => {
         },
         select: {
             id: true,
+            userId: true,
             expiresAt: true
         }
     });
 
     return Response.json({
         session_token: session.id,
+        user_id: session.userId,
         expires_at: session.expiresAt.toISOString(),
     }, {
         status: 201,

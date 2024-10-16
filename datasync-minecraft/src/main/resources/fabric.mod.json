@@ -32,6 +32,11 @@
 				"fabric",
 				"quilt"
 			]
+		},
+		"loom:injected_interfaces": {
+			"net/minecraft/class_1657": [
+				"dev/upcraft/datasync/api/ext/DataSyncPlayerExt"
+			]
 		}
 	},
 	"entrypoints": {

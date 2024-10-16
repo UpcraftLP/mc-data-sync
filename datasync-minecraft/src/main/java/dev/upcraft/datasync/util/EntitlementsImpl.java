@@ -15,4 +15,8 @@ public record EntitlementsImpl(List<ResourceLocation> keys) implements Entitleme
     ).apply(instance, EntitlementsImpl::new));
 
     public static final Codec<Entitlements> CODEC = RAW_CODEC.xmap(UnaryOperator.identity(), entitlements -> new EntitlementsImpl(entitlements.keys()));
+
+    public static EntitlementsImpl empty() {
+        return new EntitlementsImpl(List.of());
+    }
 }

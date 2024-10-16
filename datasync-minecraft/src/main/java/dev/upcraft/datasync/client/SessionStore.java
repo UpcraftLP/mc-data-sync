@@ -71,7 +71,7 @@ public class SessionStore {
 
         var challenge = opt.get().getFirst();
         try {
-            Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getSessionId(), challenge);
+            Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getAccessToken(), challenge);
         } catch (AuthenticationException e) {
             DataSyncMod.LOGGER.error("Unable to authenticate", e);
             cooldownUntil = Instant.now().plus(30, ChronoUnit.SECONDS);

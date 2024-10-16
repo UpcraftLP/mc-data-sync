@@ -15,6 +15,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 
 public class DataSyncMod implements ModInitializer {
 
@@ -25,6 +26,8 @@ public class DataSyncMod implements ModInitializer {
     public static final String API_URL = "https://datasync-api.uuid.gg/api";
     public static final ResourceLocation ENTITLEMENTS_ID = dataId("entitlements");
     public static final SyncToken<Entitlements> ENTITLEMENTS_TOKEN = DataSyncAPI.register(Entitlements.class, DataSyncMod.ENTITLEMENTS_ID, EntitlementsImpl.CODEC);
+
+    public static final Duration REQUEST_TIMEOUT = Duration.ofMillis(Long.getLong("datasync.request.timeout", 6000));
 
     public static ResourceLocation dataId(String path) {
         return new ResourceLocation("datasync", path);

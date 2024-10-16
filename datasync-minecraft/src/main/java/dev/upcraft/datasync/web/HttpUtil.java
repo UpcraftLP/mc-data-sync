@@ -19,7 +19,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
@@ -86,16 +85,14 @@ public class HttpUtil {
     }
 
     public static HttpRequest.Builder addUserAgentHeader(HttpRequest.Builder requestBuilder) {
-        return requestBuilder.header("User-Agent", getUserAgentString())
-                //FIXME move elsewhere and make 6 seconds default
-                .timeout(Duration.ofSeconds(2));
+        return requestBuilder.header("User-Agent", getUserAgentString());
     }
 
     public static void postJsonRequest(URI uri, JsonElement json) {
         var requestBuilder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(json)));
         sendsJson(requestBuilder);
         addUserAgentHeader(requestBuilder);
-        var request = requestBuilder.build();
+        var request = requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT).build();
         try {
             var response = getClient().send(request, HttpResponse.BodyHandlers.discarding());
             DataSyncMod.LOGGER.trace("HTTP {}:{} - {}", request.method(), response.statusCode(), request.uri());
@@ -114,7 +111,7 @@ public class HttpUtil {
     public static JsonElement makeJsonRequest(HttpRequest.Builder requestBuilder) {
         acceptsJson(requestBuilder);
         addUserAgentHeader(requestBuilder);
-        var request = requestBuilder.build();
+        var request = requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT).build();
 
         try {
             HttpResponse<InputStream> response = getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());

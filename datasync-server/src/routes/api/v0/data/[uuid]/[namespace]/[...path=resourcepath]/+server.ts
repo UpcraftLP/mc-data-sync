@@ -72,9 +72,21 @@ export const POST: RequestHandler = async ({ params, request }) => {
 
     const sessionToken = auth.split(" ")[1];
 
+    // clear up old sessions
+    await prisma.session.deleteMany({
+        where: {
+            expiresAt: {
+                lt: new Date()
+            }
+        }
+    });
+
     const session = await prisma.session.findUnique({
         where: {
-            id: sessionToken
+            id: sessionToken,
+            expiresAt: {
+                gt: new Date()
+            }
         },
         include: {
             user: {

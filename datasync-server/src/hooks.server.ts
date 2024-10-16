@@ -22,7 +22,7 @@ const authorizationHandle: Handle = async ({ event, resolve }) => {
 
 const log: Handle = async ({ event, resolve }) => {
     const response = await resolve(event);
-    console.log(`${event.request.method} ${event.url} {${JSON.stringify(event.params)}} -> ${response.status}`);
+    console.log(`${event.request.method} ${event.url} -> ${response.status}`);
     return response;
 };
 

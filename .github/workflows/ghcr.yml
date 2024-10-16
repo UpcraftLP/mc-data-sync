@@ -3,6 +3,7 @@ on:
   push:
     branches: [ "*" ]
     paths:
+      - '.github/workflows/ghcr.yml'
       - 'datasync-server/**'
 
 jobs:

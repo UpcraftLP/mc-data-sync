@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "*" ]
     paths:
+      - '.github/workflows/client.yml'
       - 'datasync-minecraft/**'
   pull_request:
 

@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model MinecraftUser {
+  id String @id
+
+  bannedAt DateTime?
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  UserConfigData UserConfigData[]
+
+  entitlements Entitlement[]
+}
+
+model Entitlement {
+  id String @id
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  MinecraftUser  MinecraftUser[]
+  UserConfigData UserConfigData[]
+}
+
+model UserConfigData {
+  id Int @id @default(autoincrement())
+
+  minecraftUser   MinecraftUser @relation(fields: [minecraftUserId], references: [id])
+  minecraftUserId String
+
+  entitlement   Entitlement @relation(fields: [entitlementId], references: [id])
+  entitlementId String
+  value         String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([minecraftUserId, entitlementId])
+}

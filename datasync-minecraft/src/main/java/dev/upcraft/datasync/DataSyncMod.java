@@ -43,7 +43,8 @@ public class DataSyncMod implements ModInitializer {
     }
 
     private static boolean checkInternetAccess() {
-        try (var client = HttpClient.newHttpClient()) {
+        try {
+            var client = HttpClient.newHttpClient();
             var request = HttpRequest.newBuilder().uri(URI.create("https://sessionserver.mojang.com")).build();
             client.send(request, HttpResponse.BodyHandlers.discarding());
             return true;

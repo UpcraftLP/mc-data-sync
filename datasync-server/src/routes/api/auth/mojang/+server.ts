@@ -77,11 +77,16 @@ export const POST: RequestHandler = async ({ request }) => {
                     }
                 }
             }
+        },
+        select: {
+            id: true,
+            expiresAt: true
         }
     });
 
     return Response.json({
         session_token: session.id,
+        expires_at: session.expiresAt.toISOString(),
     }, {
         status: 201,
     });

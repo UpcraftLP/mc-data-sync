@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import oshi.SystemInfo;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.net.ConnectException;
@@ -22,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 public class HttpUtil {
 
@@ -88,17 +88,40 @@ public class HttpUtil {
         return requestBuilder.header("User-Agent", getUserAgentString());
     }
 
-    public static void postJsonRequest(URI uri, JsonElement json) {
+    public static void postJsonRequest(URI uri, JsonElement json, UnaryOperator<HttpRequest.Builder> extraProperties) {
         var requestBuilder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(json)));
         sendsJson(requestBuilder);
         addUserAgentHeader(requestBuilder);
-        var request = requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT).build();
+        var request = extraProperties.apply(requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT)).build();
         try {
             var response = getClient().send(request, HttpResponse.BodyHandlers.discarding());
             DataSyncMod.LOGGER.trace("HTTP {}:{} - {}", request.method(), response.statusCode(), request.uri());
             if (response.statusCode() != 204) {
                 // TODO log exception message
                 throw new IOException("Unable to send data: received HTTP " + response.statusCode());
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException("unable to send request", e);
+        } catch (IOException e) {
+            throw new UncheckedIOException("IO error when sending request", e);
+        }
+    }
+
+    public static JsonElement postJson(URI uri, JsonElement json) {
+        var requestBuilder = HttpRequest.newBuilder(uri).POST(HttpRequest.BodyPublishers.ofString(GSON.toJson(json)));
+        sendsJson(requestBuilder);
+        acceptsJson(requestBuilder);
+        addUserAgentHeader(requestBuilder);
+        var request = requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT).build();
+        try {
+            var response = getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
+            DataSyncMod.LOGGER.trace("HTTP {}:{} - {}", request.method(), response.statusCode(), request.uri());
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                throw new IOException("Unable to send data: received HTTP " + response.statusCode());
+            }
+
+            try (var reader = new InputStreamReader(response.body(), StandardCharsets.UTF_8)) {
+                return GSON.fromJson(reader, JsonElement.class);
             }
         } catch (InterruptedException e) {
             throw new RuntimeException("unable to send request", e);
@@ -114,7 +137,7 @@ public class HttpUtil {
         var request = requestBuilder.timeout(DataSyncMod.REQUEST_TIMEOUT).build();
 
         try {
-            HttpResponse<InputStream> response = getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
+            var response = getClient().send(request, HttpResponse.BodyHandlers.ofInputStream());
             DataSyncMod.LOGGER.trace("HTTP {}:{} - {}", request.method(), response.statusCode(), request.uri());
             if(response.statusCode() < 200 || response.statusCode() >= 300) {
                 if(response.statusCode() == 404) {

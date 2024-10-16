@@ -1,7 +1,7 @@
-name: Build & Publish Web Server (main)
+name: Build web
 on:
   push:
-    branches: [ main ]
+    branches: [ "*" ]
     paths:
       - 'datasync-server/**'
 

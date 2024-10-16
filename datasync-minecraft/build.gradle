@@ -1,0 +1,180 @@
+plugins {
+    id 'fabric-loom' version '1.7-SNAPSHOT'
+    id 'maven-publish'
+}
+
+def ENV = System.getenv()
+
+def javaVersion = 17
+
+group = maven_group_id
+
+def NOW = new Date()
+def buildTime = ENV.BUILD_TIME ?: NOW.format('yyyyMMddHHmmss')
+
+boolean isPreviewBuild = !ENV.TAG || ENV.TAG.matches(".+-.+")
+def buildNumber = !ENV.TAG ? ("${ENV.BUILD_NUMBER ? "build.${ENV.BUILD_NUMBER}" : buildTime}") : ""
+version = (ENV.TAG ?: "${minecraft_version}-development") + ((isPreviewBuild && !ENV.TAG) ? "+${buildNumber}" : "")
+
+base {
+    archivesName.set("datasync-minecraft")
+}
+
+loom {
+    runs {
+        configureEach {
+            if (project.hasProperty('mc_java_agent_path')) {
+                vmArg("-javaagent:${project.findProperty('mc_java_agent_path')}")
+            }
+
+            property("fabric.log.level", "trace")
+            property("java.net.preferIPv4Stack", "true")
+        }
+
+        client {
+            client()
+            setConfigName("Fabric Client")
+            ideConfigGenerated(true)
+            runDir("run")
+
+            if (project.hasProperty('mc_uuid')) {
+                programArg("--uuid=${project.findProperty('mc_uuid')}")
+            }
+
+            if (project.hasProperty('mc_username')) {
+                programArg("--username=${project.findProperty('mc_username')}")
+            }
+
+            if (project.hasProperty('mc_java_agent_path')) {
+                vmArg("-javaagent:${project.findProperty('mc_java_agent_path')}")
+            }
+        }
+
+        server {
+            server()
+            setConfigName("Fabric Server")
+            ideConfigGenerated(true)
+            runDir("run/server")
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = "TerraformersMC"
+        url = "https://maven.terraformersmc.com/releases"
+    }
+}
+
+dependencies {
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    modLocalRuntime "com.terraformersmc:modmenu:${modmenu_version}"
+}
+
+processResources {
+    filteringCharset "UTF-8"
+
+    def expandProps = [
+            "version"              : version,
+            "mod_id"               : mod_id,
+            "mod_display_name"     : mod_display_name,
+            "mod_description"      : mod_description,
+            "sources_url"          : sources_url,
+            "issues_url"           : issues_url,
+            "discord_url"          : discord_url,
+            "homepage_url"         : homepage_url,
+            "minecraft_version"    : minecraft_version,
+            "java_version"         : "${javaVersion}",
+
+            "fabric_loader_version": loader_version,
+    ]
+
+    filesMatching("fabric.mod.json") {
+        expand expandProps
+    }
+    inputs.properties expandProps
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release.set(javaVersion)
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+        vendor = JvmVendorSpec.MICROSOFT
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release.set(javaVersion)
+}
+
+javadoc {
+    options.tags = ["reason", "implNote"]
+}
+
+jar {
+    from("LICENSE.md") {
+        rename { "LICENSE_${project.base.archivesName.get()}.md" }
+    }
+
+    manifest {
+        attributes([
+                'Specification-Title'     : rootProject.name,
+                'Specification-Version'   : project.version,
+                'Implementation-Title'    : "${rootProject.name}-${project.name}",
+                'Maven-Artifact'          : "${maven_group_id}:datasync-minecraft-${project.minecraft_version}-fabric:${project.version}",
+                'Implementation-Version'  : project.version,
+                'Implementation-Timestamp': NOW.format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                'Timestamp'               : NOW.toInstant().toEpochMilli(),
+                'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                'Built-On-Minecraft'      : minecraft_version
+        ])
+    }
+}
+
+sourcesJar {
+    from(rootProject.file("LICENSE.md")) {
+        rename { "LICENSE_${project.base.archivesName.get()}.md" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "datasync-minecraft-${project.minecraft_version}-fabric"
+            from components.java
+        }
+    }
+
+    repositories {
+        if (ENV.MAVEN_UPLOAD_URL) {
+            maven {
+                url = ENV.MAVEN_UPLOAD_URL
+                credentials {
+                    username = ENV.MAVEN_UPLOAD_USERNAME
+                    password = ENV.MAVEN_UPLOAD_PASSWORD
+                }
+            }
+        }
+    }
+}

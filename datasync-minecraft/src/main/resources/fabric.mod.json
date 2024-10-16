@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"id": "${mod_id}",
+	"version": "${version}",
+	"name": "${mod_display_name}",
+	"description": "${mod_description}",
+	"authors": [
+		"Up"
+	],
+	"contact": {
+		"homepage": "${homepage_url}",
+		"sources": "${sources_url}",
+		"issues": "${issues_url}"
+	},
+	"license": "ARR",
+	"icon": "icon.png",
+	"environment": "*",
+	"custom": {
+		"modmenu": {
+			"links": {
+				"modmenu.discord": "${discord_url}"
+			},
+			"badges": [
+				"library"
+			]
+		},
+		"mc-publish": {
+			"dependencies": [
+				"fabric-api(required)#{curseforge:306612}{modrinth:P7dR8mSH}"
+			],
+			"loaders": [
+				"fabric",
+				"quilt"
+			]
+		}
+	},
+	"entrypoints": {
+		"main": ["dev.upcraft.datasync.DataSyncMod"],
+		"client": ["dev.upcraft.datasync.client.DataSyncModClient"]
+	},
+	"mixins": [
+		"${mod_id}.mixins.json"
+	],
+	"depends": {
+		"fabricloader": "*",
+		"minecraft": "=${minecraft_version}",
+		"java": ">=${java_version}",
+		"fabric-api": "*"
+	}
+}

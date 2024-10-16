@@ -27,8 +27,8 @@ public class SessionStore {
     ).apply(instance, Pair::of));
 
     private static final Codec<Session> SESSION_TOKEN_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.STRING_CODEC.fieldOf("id").forGetter(Session::userId),
-            Codec.STRING.fieldOf("token").forGetter(Session::accessToken),
+            UUIDUtil.STRING_CODEC.fieldOf("user_id").forGetter(Session::userId),
+            Codec.STRING.fieldOf("session_token").forGetter(Session::accessToken),
             ExtraCodecs.INSTANT_ISO8601.fieldOf("expires_at").forGetter(Session::expiresAt)
     ).apply(instance, Session::new));
 

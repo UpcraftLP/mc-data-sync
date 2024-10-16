@@ -33,12 +33,14 @@ export const POST: RequestHandler = async ({ request }) => {
         },
         select: {
             token: true,
+            userId: true,
             expiresAt: true
         }
     });
 
     return Response.json({
         token: challenge.token,
+        user_id: challenge.userId,
         expires_in: challenge.expiresAt.getTime() - Date.now(),
     });
 };

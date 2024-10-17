@@ -1,0 +1,8 @@
+*.env
+env.*
+
+debug/
+target/
+
+docker-compose.yml
+docker-compose.*.yml

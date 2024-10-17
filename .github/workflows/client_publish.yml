@@ -1,4 +1,4 @@
-name: Upload Release Artifacts (client)
+name: Publish (Client)
 
 on:
   push:

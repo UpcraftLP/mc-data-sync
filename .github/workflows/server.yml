@@ -1,9 +1,9 @@
-name: Build web
+name: Build (Server)
 on:
   push:
     branches: [ "*" ]
     paths:
-      - '.github/workflows/ghcr.yml'
+      - '.github/workflows/server.yml'
       - 'datasync-server/**'
 
 jobs:

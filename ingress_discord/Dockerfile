@@ -1,19 +1,27 @@
-FROM rust:1.81.0 AS build
+FROM rust:1.81.0-alpine AS base
 
-WORKDIR /build
+RUN apk update && apk add --no-cache musl-dev
 
-RUN apt update \
-    && apt install -y \
-    musl-dev \
-    libssl-dev \
-    pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+RUN cargo install cargo-chef --version ^0.1
 
-# statically link against openssl
-ENV OPENSSL_STATIC=1
+WORKDIR /app
 
 ARG RUST_ENVIRONMENT
 ENV RUST_ENVIRONMENT=${RUST_ENVIRONMENT:-production}
+
+FROM base AS planner
+
+COPY . .
+
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo chef prepare --recipe-path recipe.json
+
+FROM base AS builder
+
+COPY --from=planner /app/recipe.json recipe.json
+
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo chef cook --release --recipe-path recipe.json
 
 ARG VERSION
 ENV VERSION=${VERSION:-dev}
@@ -21,22 +29,16 @@ ENV VERSION=${VERSION:-dev}
 COPY . .
 
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/home/root/app/target \
-    cargo build --target x86_64-unknown-linux-gnu --release --bins
+    cargo build --release --bins
 
-FROM debian:12.7-slim AS runtime
+FROM alpine:latest AS runtime
 
 WORKDIR /
 
-RUN apt update \
-    && apt install -y \
-    libssl-dev \
-    pkg-config \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=build /build/target/x86_64-unknown-linux-gnu/release/ingress .
-COPY --from=build /build/target/x86_64-unknown-linux-gnu/release/register .
+COPY --from=builder /app/target/release/ingress .
+COPY --from=builder /app/target/release/register .
 
 EXPOSE 3000
 

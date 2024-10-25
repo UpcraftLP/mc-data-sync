@@ -3,7 +3,7 @@ use ingress_discord::discord::BotInfo;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenvy::dotenv().ok();
+    ingress_discord::init();
     env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info"))?;
 
     let handler = discord::init().await?;

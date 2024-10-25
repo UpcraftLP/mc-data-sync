@@ -1,11 +1,12 @@
 use crate::util::db;
+use actix_web::web;
+use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
-use futures::lock::Mutex;
+use r2d2::Pool;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 pub(crate) const COMMAND_NAME: &str = "link";
 
@@ -37,24 +38,23 @@ pub(crate) async fn link_command(
     handler: &mut InteractionHandler,
     ctx: Context,
 ) -> InteractionResponse {
-    let mut db_connection = handler
+    let pool = handler
         .data
-        .get::<Arc<Mutex<SqliteConnection>>>()
-        .unwrap()
-        .lock()
-        .await;
+        .get::<Pool<ConnectionManager<SqliteConnection>>>()
+        .expect("Failed to get connection pool from interaction handler")
+        .clone();
 
     let data = &ctx.interaction.data.clone().unwrap();
     let opts = data.options.clone().unwrap();
 
-    let discord_snowflake = &ctx
+    let discord_snowflake = *&ctx
         .interaction
         .member
         .clone()
         .expect("must run commands within a guild")
         .user
         .id;
-    let guild_snowflage = &ctx
+    let guild_snowflake = *&ctx
         .interaction
         .guild_id
         .expect("must run commands within a guild");
@@ -82,14 +82,22 @@ pub(crate) async fn link_command(
                         }
                     } else {
                         let player_data = db_response.data.player.expect("Player data is missing");
-                        // TODO save to DB and make link request to API
 
-                        match db::add_guild_connection(
-                            *discord_snowflake,
-                            *guild_snowflage,
-                            player_data.id.as_str(),
-                            &mut db_connection,
-                        ) {
+                        let db_err = web::block(move || {
+                            let mut conn = pool.get().expect("Failed to get connection from pool");
+                            db::add_guild_connection(
+                                &mut conn,
+                                discord_snowflake.clone(),
+                                guild_snowflake.clone(),
+                                player_data.id.as_str(),
+                            )
+                        })
+                        .await
+                        .expect("blocking error");
+
+                        // TODO make link request to API
+
+                        match db_err {
                             Ok(()) => {
                                 log::info!(
                                     "Link success: Discord: {}, Minecraft: {}",

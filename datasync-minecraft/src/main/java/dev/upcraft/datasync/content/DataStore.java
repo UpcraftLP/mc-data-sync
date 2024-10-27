@@ -27,15 +27,15 @@ public class DataStore {
 
     public static <T> StoredDataHolder<T> lookup(UUID playerId, DataType<T> type, boolean forceRefresh) {
         var value = getPlayerLookup(playerId, type);
-        if (forceRefresh && !value.isLoading()) {
+        if (forceRefresh) {
             value.reload();
         }
         return value;
     }
 
-    public static CompletableFuture<Void> refresh(UUID uuid) {
+    public static CompletableFuture<Void> refresh(UUID uuid, boolean force) {
         var startTime = Instant.now();
-        return CompletableFuture.allOf(DataRegistry.values().parallelStream().map(dataType -> lookup(uuid, dataType, true).asFuture()).toArray(CompletableFuture[]::new)).thenRun(() -> {
+        return CompletableFuture.allOf(DataRegistry.values().parallelStream().map(dataType -> lookup(uuid, dataType, force).asFuture()).toArray(CompletableFuture[]::new)).thenRun(() -> {
             var stopTime = Instant.now();
             var duration = Duration.between(startTime, stopTime);
             DataSyncMod.LOGGER.info("Loaded {} player data objects (took {}s {}ms)", DataRegistry.size(), duration.toSeconds(), duration.toMillisPart());

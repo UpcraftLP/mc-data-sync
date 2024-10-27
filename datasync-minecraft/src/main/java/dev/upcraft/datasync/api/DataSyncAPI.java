@@ -18,6 +18,6 @@ public class DataSyncAPI {
     }
 
     public static CompletableFuture<Void> refreshAllPlayerData(UUID playerId) {
-        return DataStore.refresh(playerId);
+        return DataStore.refresh(playerId, true);
     }
 }

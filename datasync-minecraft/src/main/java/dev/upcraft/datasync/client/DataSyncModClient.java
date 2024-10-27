@@ -2,8 +2,8 @@ package dev.upcraft.datasync.client;
 
 import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.DataSyncMod;
-import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.util.GameProfileHelper;
+import dev.upcraft.datasync.content.DataStore;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -23,7 +23,7 @@ public class DataSyncModClient implements ClientModInitializer {
             return;
         }
 
-        DataSyncAPI.refreshAllPlayerData(profile.getId()).exceptionally(t -> {
+        DataStore.refresh(profile.getId(), false).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to preload player data", t);
             return null;
         });

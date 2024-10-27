@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Mixin(Player.class)
 public abstract class PlayerMixin extends LivingEntity implements DataSyncPlayerExt {
@@ -26,12 +25,17 @@ public abstract class PlayerMixin extends LivingEntity implements DataSyncPlayer
     @Shadow public abstract GameProfile getGameProfile();
 
     @Override
-    public CompletableFuture<Entitlements> datasync$getEntitlements() {
-        return Entitlements.token().get(this.getGameProfile().getId()).thenApply(opt -> opt.orElseGet(EntitlementsImpl::empty));
+    public Entitlements datasync$getEntitlements() {
+        return Entitlements.token().getOrDefault(this.getGameProfile().getId(), EntitlementsImpl.empty());
     }
 
     @Override
-    public <T> CompletableFuture<Optional<T>> datasync$get(SyncToken<T> token) {
+    public <T> Optional<T> datasync$get(SyncToken<T> token) {
         return token.get(this.getUUID());
+    }
+
+    @Override
+    public <T> T datasync$getOrDefault(SyncToken<T> token, T defaultValue) {
+        return token.getOrDefault(this.getUUID(), defaultValue);
     }
 }

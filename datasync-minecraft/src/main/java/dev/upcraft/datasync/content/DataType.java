@@ -12,8 +12,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -23,11 +21,9 @@ import java.util.concurrent.CompletableFuture;
 
 public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) implements SyncToken<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(DataType.class);
-
     @Override
-    public CompletableFuture<Optional<T>> get(UUID playerId) {
-        return DataStore.lookup(playerId, this, false);
+    public CompletableFuture<Optional<T>> fetch(UUID playerId) {
+        return DataStore.lookup(playerId, this, false).asFuture();
     }
 
     @Override
@@ -45,10 +41,9 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
         var playerId = profile.getId();
 
         // manually store data so the client gets an immediate update
-        var lookup = DataStore.getPlayerLookup(playerId);
-        //noinspection unchecked
-        @Nullable T previous = (T) lookup.getIfPresent(this.id());
-        lookup.put(this.id(), Optional.ofNullable(data));
+        var lookup = DataStore.getPlayerLookupEmpty(playerId, this);
+        @Nullable T previous = lookup.value();
+        lookup.setValue(data);
 
         if (GameProfileHelper.isOfflineProfile(profile)) {
             DataSyncMod.LOGGER.debug("Client is using offline mode, cannot persist data!");
@@ -74,14 +69,14 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
             return builder.header("Authorization", "Bearer %s".formatted(session.accessToken()));
         })).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to send data update for {}, restoring previous state", this.id(), t);
-            lookup.put(this.id(), Optional.ofNullable(previous));
+            lookup.setValue(previous);
             return null;
         });
         // TODO if installed on server, send packet to cause immediate sync
     }
 
     @Nullable
-    public T fetch(UUID playerId) {
+    public T fetchRemote(UUID playerId) {
         if (!DataSyncMod.HAS_INTERNET) {
             return null;
         }
@@ -96,5 +91,15 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
 
         // TODO better error handling
         return codec().decode(JsonOps.INSTANCE, json).resultOrPartial(errMsg -> DataSyncMod.LOGGER.error("Unable to decode response from {}: {}", uri, errMsg)).map(Pair::getFirst).orElse(null);
+    }
+
+    @Override
+    public Optional<T> get(UUID playerId) {
+        return Optional.ofNullable(DataStore.lookup(playerId, this, false).value());
+    }
+
+    @Override
+    public T getOrDefault(UUID playerId, T defaultValue) {
+        return DataStore.lookup(playerId, this, false).or(defaultValue);
     }
 }

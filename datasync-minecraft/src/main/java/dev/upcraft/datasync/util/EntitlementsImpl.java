@@ -6,6 +6,7 @@ import dev.upcraft.datasync.api.util.Entitlements;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 public record EntitlementsImpl(List<ResourceLocation> keys) implements Entitlements {
@@ -16,7 +17,11 @@ public record EntitlementsImpl(List<ResourceLocation> keys) implements Entitleme
 
     public static final Codec<Entitlements> CODEC = RAW_CODEC.xmap(UnaryOperator.identity(), entitlements -> new EntitlementsImpl(entitlements.keys()));
 
-    public static EntitlementsImpl empty() {
+    public static Entitlements empty() {
         return new EntitlementsImpl(List.of());
+    }
+
+    public static Entitlements getOrEmpty(UUID playerId) {
+        return Entitlements.token().getOrDefault(playerId, empty());
     }
 }

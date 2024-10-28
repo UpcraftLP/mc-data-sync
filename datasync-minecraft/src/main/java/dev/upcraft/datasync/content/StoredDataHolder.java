@@ -32,7 +32,6 @@ public class StoredDataHolder<T> {
     }
 
     public void reload() {
-        DataSyncMod.LOGGER.error("BEEEP", new RuntimeException("stacktrace!!!"));
         T previous = this.value;
         if (this.loaderFuture != null) {
             this.loaderFuture.cancel(true);

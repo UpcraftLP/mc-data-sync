@@ -81,7 +81,7 @@ pub fn register_role_mapping(
     guild_snowflake_id: Snowflake,
     role_snowflake_id: Snowflake,
     reward: &str,
-) {
+) -> anyhow::Result<()> {
     use crate::schema::role_mappings::dsl::*;
 
     diesel::insert_into(role_mappings)
@@ -92,7 +92,8 @@ pub fn register_role_mapping(
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .expect("Failed to insert role mapping");
+        .map_err(|e| e.into())
+        .map(|_| ())
 }
 
 pub fn remove_role_mapping(

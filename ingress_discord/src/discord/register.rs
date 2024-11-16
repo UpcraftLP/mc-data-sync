@@ -19,6 +19,7 @@ pub async fn update_global_commands(
             .description("Reload the commands")
             .default_permission(false)
             .build()?,
+
         SlashCommandDefinitionBuilder::default()
             .name(commands::link::COMMAND_NAME)
             .description("Link your Minecraft account")
@@ -28,6 +29,26 @@ pub async fn update_global_commands(
                     .option_type(&ApplicationCommandOptionType::String)
                     .required(&true)
                     .description("Your Minecraft username or UUID"),
+            )
+            .build()?,
+
+        SlashCommandDefinitionBuilder::default()
+            .name(commands::add_role_mapping::COMMAND_NAME)
+            .description("Add a role mapping")
+            .default_permission(false)
+            .add_option(
+                ApplicationCommandOption::default()
+                    .name("reward_id")
+                    .option_type(&ApplicationCommandOptionType::String)
+                    .required(&true)
+                    .description("The reward ID"),
+            )
+            .add_option(
+                ApplicationCommandOption::default()
+                    .name("role")
+                    .option_type(&ApplicationCommandOptionType::Role)
+                    .required(&true)
+                    .description("The role to map"),
             )
             .build()?,
     ];

@@ -32,7 +32,9 @@ pub async fn register_role_mapping(
             input.role_id,
             input.guild_id,
             input.reward.as_str(),
-        );
+        ).unwrap_or_else(|e| {
+            log::error!("Failed to register role mapping: {e}");
+        });
     })
     .await
     .map_err(ErrorInternalServerError)?;

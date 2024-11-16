@@ -1,18 +1,11 @@
 use anyhow::Context;
-use rusty_interaction::types::Snowflake;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::{env, fs, path};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
-    pub roles: Option<Vec<RoleMapping>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RoleMapping {
-    pub role: Snowflake,
-    pub entitlement: String,
+    // NOTHING HERE YET
 }
 
 pub fn load() -> anyhow::Result<Config> {

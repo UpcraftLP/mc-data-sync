@@ -2,8 +2,9 @@ use anyhow::Context;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::Snowflake;
 
-mod commands;
+pub mod commands;
 pub mod register;
+pub mod members;
 
 #[derive(Debug, Clone)]
 pub struct BotInfo {

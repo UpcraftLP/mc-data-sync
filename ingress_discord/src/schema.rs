@@ -36,4 +36,9 @@ diesel::joinable!(guild_users -> guilds (guild_id));
 diesel::joinable!(guild_users -> users (user_id));
 diesel::joinable!(role_mappings -> guilds (guild_id));
 
-diesel::allow_tables_to_appear_in_same_query!(guild_users, guilds, role_mappings, users,);
+diesel::allow_tables_to_appear_in_same_query!(
+    guild_users,
+    guilds,
+    role_mappings,
+    users,
+);

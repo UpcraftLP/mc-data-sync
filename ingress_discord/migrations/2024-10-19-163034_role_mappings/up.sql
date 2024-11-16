@@ -5,7 +5,7 @@ CREATE TABLE role_mappings (
     role_id BIGINT NOT NULL,
     role_reward TEXT NOT NULL,
 
-    created_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (guild_id) REFERENCES guilds(snowflake) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT unique_role_mapping UNIQUE (role_id, guild_id, role_reward)

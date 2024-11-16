@@ -2,7 +2,7 @@ use anyhow::anyhow;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use ingress_discord::discord;
-use ingress_discord::discord::BotInfo;
+use ingress_discord::discord::{members, BotInfo};
 use ingress_discord::util::{config, db};
 use ingress_discord::web;
 use r2d2::Pool;
@@ -38,7 +38,9 @@ async fn main() -> anyhow::Result<()> {
     let scheduler = JobScheduler::new().await?;
 
     let job = Job::new("every 3 hours", |_uuid, _lock| {
-        log::info!("Updating users...")
+        if let Err(e) = members::update_users(None) {
+            log::error!("Failed to run scheduled user update: {e}");
+        }
     })?;
     scheduler.add(job).await?;
 

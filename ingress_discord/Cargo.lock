@@ -1355,7 +1355,6 @@ dependencies = [
  "lazy_static",
  "libsqlite3-sys",
  "log",
- "once_cell",
  "r2d2",
  "regex",
  "reqwest",

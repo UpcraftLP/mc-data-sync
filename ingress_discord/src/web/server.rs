@@ -24,14 +24,21 @@ pub async fn start(
             .app_data(app_data.clone())
             .route("/api/discord/interactions",
                    web::post().to(|data: web::Data<Mutex<ServerData>>, req: HttpRequest, body: String| async move {
-                       let data = data.lock().unwrap();
-                       data.handler.clone().interaction(req, body).await
+                       let mut handler: InteractionHandler;
+                       {
+                           let data = data.lock().unwrap();
+                           handler = data.handler.clone();
+                       }
+                       handler.interaction(req, body).await
                    }),
             )
             .route("/api/register-role-mapping",
                    web::post().to(|data: web::Data<Mutex<ServerData>>, req: HttpRequest, body: String| async move {
-                       let data = data.lock().unwrap();
-                       let pool = data.pool.clone();
+                       let pool: Pool<ConnectionManager<SqliteConnection>>;
+                       {
+                           let data = data.lock().unwrap();
+                           pool = data.pool.clone();
+                       }
                        crate::web::api::register_role_mapping(req, body, pool).await
                    }),
             )

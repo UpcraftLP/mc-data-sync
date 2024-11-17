@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use futures::TryFutureExt;
@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
     let manager = ConnectionManager::<SqliteConnection>::new(database_url.clone());
     let pool: Pool<ConnectionManager<SqliteConnection>> = Pool::builder()
         .build(manager)
-        .expect(format!("Failed to connect to database at {}", database_url).as_str());
+        .with_context(|| format!("Failed to connect to database at {database_url}"))?;
 
     db::apply_migrations(&pool).map_err(|e| anyhow!(e))?;
 

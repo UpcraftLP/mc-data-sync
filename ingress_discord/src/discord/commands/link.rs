@@ -47,14 +47,14 @@ pub(crate) async fn link_command(
     let data = &ctx.interaction.data.clone().unwrap();
     let opts = data.options.clone().unwrap();
 
-    let discord_snowflake = *&ctx
+    let discord_snowflake = ctx
         .interaction
         .member
         .clone()
         .expect("must run commands within a guild")
         .user
         .id;
-    let guild_snowflake = *&ctx
+    let guild_snowflake = ctx
         .interaction
         .guild_id
         .expect("must run commands within a guild");
@@ -86,8 +86,8 @@ pub(crate) async fn link_command(
                         let mut conn = pool.get().expect("Failed to get connection from pool");
                         db::add_guild_connection(
                             &mut conn,
-                            discord_snowflake.clone(),
-                            guild_snowflake.clone(),
+                            discord_snowflake,
+                            guild_snowflake,
                             player_data.id.as_str(),
                         )
                     })

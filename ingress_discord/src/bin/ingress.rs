@@ -1,6 +1,7 @@
 use anyhow::anyhow;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
+use futures::TryFutureExt;
 use ingress_discord::discord;
 use ingress_discord::discord::{members, BotInfo};
 use ingress_discord::util::{config, db};
@@ -38,15 +39,21 @@ async fn main() -> anyhow::Result<()> {
     let scheduler = JobScheduler::new().await?;
 
     let pool_clone = pool.clone();
-    let job = Job::new_async("every 3 hours", move |_uuid, _lock| Box::pin(
-        {
+    let job = Job::new_async("every 3 hours", move |_uuid, _lock| {
+        Box::pin({
             let value = pool_clone.clone();
             async move {
-                if let Err(e) = members::update_users(value, None).await {
+                if let Err(e) =
+                    actix_web::web::block(move || members::update_users(value, None).into_future())
+                        .await
+                        .expect("blocking error")
+                        .await
+                {
                     log::error!("Failed to run scheduled user update: {e}");
                 }
             }
-        }))?;
+        })
+    })?;
     scheduler.add(job).await?;
 
     scheduler.start().await?;

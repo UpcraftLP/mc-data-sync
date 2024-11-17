@@ -20,6 +20,15 @@ base {
     archivesName.set("datasync-minecraft")
 }
 
+sourceSets {
+    testmod {
+        java {
+            compileClasspath += main.compileClasspath
+            runtimeClasspath += main.runtimeClasspath
+        }
+    }
+}
+
 loom {
     runs {
         configureEach {
@@ -54,13 +63,37 @@ loom {
             server()
             setConfigName("Fabric Server")
             ideConfigGenerated(true)
-            runDir("run/server")
+            runDir("run")
+        }
+
+        testmodClient {
+            client()
+            setConfigName("Fabric Testmod Client")
+            ideConfigGenerated(true)
+            runDir("run")
+            source(sourceSets.testmod)
+
+            if (project.hasProperty('mc_uuid')) {
+                programArg("--uuid=${project.findProperty('mc_uuid')}")
+            }
+
+            if (project.hasProperty('mc_username')) {
+                programArg("--username=${project.findProperty('mc_username')}")
+            }
+
+            if (project.hasProperty('mc_java_agent_path')) {
+                vmArg("-javaagent:${project.findProperty('mc_java_agent_path')}")
+            }
         }
     }
 
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main
+        }
+
+        "testmod" {
+            sourceSet sourceSets.testmod
         }
     }
 }
@@ -82,9 +115,35 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     modLocalRuntime "com.terraformersmc:modmenu:${modmenu_version}"
+
+    testmodImplementation sourceSets.main.output
 }
 
 processResources {
+    filteringCharset "UTF-8"
+
+    def expandProps = [
+            "version"              : version,
+            "mod_id"               : mod_id,
+            "mod_display_name"     : mod_display_name,
+            "mod_description"      : mod_description,
+            "sources_url"          : sources_url,
+            "issues_url"           : issues_url,
+            "discord_url"          : discord_url,
+            "homepage_url"         : homepage_url,
+            "minecraft_version"    : minecraft_version,
+            "java_version"         : "${javaVersion}",
+
+            "fabric_loader_version": loader_version,
+    ]
+
+    filesMatching("fabric.mod.json") {
+        expand expandProps
+    }
+    inputs.properties expandProps
+}
+
+processTestmodResources {
     filteringCharset "UTF-8"
 
     def expandProps = [

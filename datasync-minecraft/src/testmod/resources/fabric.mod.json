@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "testmod",
+  "version": "${version}",
+  "name": "${mod_display_name} Testmod",
+  "description": "Testmod for ${mod_display_name}",
+  "authors": [
+    "Up"
+  ],
+  "contact": {
+    "homepage": "${homepage_url}",
+    "sources": "${sources_url}",
+    "issues": "${issues_url}"
+  },
+  "license": "ARR",
+  "icon": "icon.png",
+  "environment": "*",
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "${discord_url}"
+      }
+    }
+  },
+  "entrypoints": {
+    "main": [
+      "dev.upcraft.datasync.testmod.Testmod"
+    ],
+    "client": [
+      "dev.upcraft.datasync.testmod.Testmod"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "=${minecraft_version}",
+    "java": ">=${java_version}",
+    "fabric-api": "*",
+    "${mod_id}": "=${version}"
+  }
+}

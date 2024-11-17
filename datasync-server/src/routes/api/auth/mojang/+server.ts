@@ -12,10 +12,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	const input = (await request.json()) as LoginInput;
 
 	if (!input || !input.id || !input.username || !input.token) {
-		return new Response(
-			JSON.stringify({
+		return Response.json(
+			{
 				error: 'Malformed input'
-			}),
+			},
 			{
 				status: 400
 			}

@@ -31,8 +31,6 @@ export async function POST({ request }) {
 		);
 	}
 
-	console.log(`removing entitlements for user ${input.uuid}: [${input.entitlements.join(',')}]`);
-
 	const user = await prisma.minecraftUser.findUnique({
 		where: {
 			id: input.uuid
@@ -46,7 +44,6 @@ export async function POST({ request }) {
 		}
 	});
 
-	// short-circuit if user already has all relevant entitlements
 	if (user === null) {
 		return Response.json(
 			{
@@ -58,20 +55,17 @@ export async function POST({ request }) {
 		);
 	}
 
+	const newEntitlements = user.entitlements.filter((e) => !input.entitlements.includes(e.id));
 	await prisma.minecraftUser.update({
 		where: {
 			id: input.uuid
 		},
 		data: {
 			entitlements: {
-				connect: user.entitlements
-					.filter((e) => !input.entitlements.includes(e.id))
-					.map((e) => ({ id: e.id }))
+				connect: newEntitlements.map((e) => ({ id: e.id }))
 			}
 		}
 	});
 
-	return Response.json({
-		success: true
-	});
+	return Response.json(newEntitlements.map((e) => e.id));
 }

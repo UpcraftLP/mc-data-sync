@@ -31,8 +31,6 @@ export async function POST({ request }) {
 		);
 	}
 
-	console.log(`Adding entitlements for user ${input.uuid}: [${input.entitlements.join(',')}]`);
-
 	const user = await prisma.minecraftUser.findUnique({
 		where: {
 			id: input.uuid
@@ -88,11 +86,7 @@ export async function POST({ request }) {
 			}
 		});
 
-		return new Response(
-			JSON.stringify({
-				success: true
-			})
-		);
+		return Response.json(entitlements.map((e) => e.id));
 	}
 
 	const newEntitlementList = [
@@ -111,7 +105,5 @@ export async function POST({ request }) {
 		}
 	});
 
-	return Response.json({
-		success: true
-	});
+	return Response.json(newEntitlementList);
 }

@@ -95,8 +95,6 @@ pub(crate) async fn link_command(
                         .await
                         .expect("blocking error");
 
-                        // TODO make link request to API
-
                         match db_err {
                             Ok(()) => {
                                 log::info!(
@@ -108,13 +106,13 @@ pub(crate) async fn link_command(
                                     .respond()
                                     .is_ephemeral(true)
                                     .content(format!(
-                                        "Successfully linked with user: {}",
+                                        "Successfully linked with user: `{}`",
                                         &player_data.username
                                     ))
                                     .finish();
                             }
                             Err(err) => {
-                                log::error!("Failed add guild connection: {err}");
+                                log::error!("Failed add guild connection: {:?}", err);
                                 error = Some("Internal Server Error".to_string());
                             }
                         }
@@ -135,7 +133,7 @@ pub(crate) async fn link_command(
     ctx.respond()
         .is_ephemeral(true)
         .content(format!(
-            "Failed to link: {}",
+            "Failed to link: `{}`",
             error.unwrap_or("unknown error".to_string())
         ))
         .finish()

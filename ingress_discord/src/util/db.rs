@@ -66,6 +66,24 @@ pub fn add_guild_connection(
     guild_snowflake_id: Snowflake,
     minecraft_uuid_string: &str,
 ) -> anyhow::Result<()> {
+    use crate::schema::users::dsl::*;
+    diesel::insert_into(users)
+        .values(NewUser {
+            snowflake: i64(user_snowflake_id),
+        })
+        .on_conflict_do_nothing()
+        .execute(connection)
+        .context("Failed to insert user")?;
+
+    use crate::schema::guilds::dsl::*;
+    diesel::insert_into(guilds)
+        .values(NewGuild {
+            snowflake: i64(guild_snowflake_id),
+        })
+        .on_conflict_do_nothing()
+        .execute(connection)
+        .context("Failed to insert guild")?;
+
     use crate::schema::guild_users::dsl::*;
 
     diesel::insert_into(guild_users)

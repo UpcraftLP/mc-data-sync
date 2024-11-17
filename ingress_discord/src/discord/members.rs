@@ -98,7 +98,7 @@ pub async fn update_users(
     for data in update_state {
         client
             .post(format!(
-                "{api_url}/users/add-entitlement",
+                "{api_url}/users/add-entitlements",
                 api_url = *API_URL
             ))
             .json(&data)

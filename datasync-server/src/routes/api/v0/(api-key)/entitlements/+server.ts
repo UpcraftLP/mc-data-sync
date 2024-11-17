@@ -21,9 +21,15 @@ export const PUT: RequestHandler = async ({ request }) => {
 
     const id = `${input.namespace}:${input.path}`;
 
-    await prisma.entitlement.create({
-        data: {
+    await prisma.entitlement.upsert({
+        where: {
             id
+        },
+        create: {
+            id
+        },
+        update: {
+            updatedAt: new Date()
         }
     });
 

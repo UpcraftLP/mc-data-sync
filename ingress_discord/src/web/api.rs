@@ -1,4 +1,5 @@
 use crate::util::db;
+use crate::util::identifier::Identifier;
 use actix_web::error::ErrorInternalServerError;
 use actix_web::{web, HttpRequest, HttpResponse};
 use diesel::r2d2::ConnectionManager;
@@ -6,7 +7,6 @@ use diesel::SqliteConnection;
 use r2d2::Pool;
 use rusty_interaction::types::Snowflake;
 use serde::{Deserialize, Serialize};
-use crate::util::identifier::Identifier;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct RoleMappingInput {
@@ -27,21 +27,20 @@ pub async fn register_role_mapping(
 
     let reward_id = input.reward.parse::<Identifier>();
     if let Err(e) = reward_id {
-        return Err(actix_web::error::ErrorBadRequest(format!("Invalid Identifier `{}` - {e}", input.reward)));
+        return Err(actix_web::error::ErrorBadRequest(format!(
+            "Invalid Identifier `{}` - {e}",
+            input.reward
+        )));
     }
     let reward_id: Identifier = reward_id.unwrap();
 
     web::block(move || {
         let mut conn = pool.get().expect("Failed to get connection from pool");
 
-        db::register_role_mapping(
-            &mut conn,
-            input.role_id,
-            input.guild_id,
-            &reward_id,
-        ).unwrap_or_else(|e| {
-            log::error!("Failed to register role mapping: {e}");
-        });
+        db::register_role_mapping(&mut conn, input.role_id, input.guild_id, &reward_id)
+            .unwrap_or_else(|e| {
+                log::error!("Failed to register role mapping: {e}");
+            });
     })
     .await
     .map_err(ErrorInternalServerError)?;

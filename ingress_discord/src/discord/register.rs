@@ -19,7 +19,6 @@ pub async fn update_global_commands(
             .description("Reload the commands")
             .default_permission(false)
             .build()?,
-
         SlashCommandDefinitionBuilder::default()
             .name(commands::link::COMMAND_NAME)
             .description("Link your Minecraft account")
@@ -31,7 +30,6 @@ pub async fn update_global_commands(
                     .description("Your Minecraft username or UUID"),
             )
             .build()?,
-
         SlashCommandDefinitionBuilder::default()
             .name(commands::add_role_mapping::COMMAND_NAME)
             .description("Add a role mapping")

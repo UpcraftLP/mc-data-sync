@@ -35,12 +35,20 @@ impl FromStr for Identifier {
             bail!(r#"path `{path}` does not match `^[a-z0-9/._-]+$`"#);
         }
 
-        Ok(Identifier { namespace, path: path.clone() })
+        Ok(Identifier {
+            namespace,
+            path: path.clone(),
+        })
     }
 }
 
 impl Display for Identifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{namespace}:{path}", namespace = self.namespace, path = self.path)
+        write!(
+            f,
+            "{namespace}:{path}",
+            namespace = self.namespace,
+            path = self.path
+        )
     }
 }

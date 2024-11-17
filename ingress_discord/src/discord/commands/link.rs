@@ -70,60 +70,58 @@ pub(crate) async fn link_command(
     let error: Option<String>;
 
     match reqwest::get(&url).await {
-        Ok(response) => {
-            match response.json::<PlayerDbResponse>().await {
-                Ok(db_response) => {
-                    if !db_response.success {
-                        if db_response.code == "minecraft.invalid_username" {
-                            error = Some(format!("No player found for '{}'", username_or_id));
-                        } else {
-                            log::error!("Received error from PlayerDb: {}", db_response.message);
-                            error = Some(db_response.message);
-                        }
+        Ok(response) => match response.json::<PlayerDbResponse>().await {
+            Ok(db_response) => {
+                if !db_response.success {
+                    if db_response.code == "minecraft.invalid_username" {
+                        error = Some(format!("No player found for '{}'", username_or_id));
                     } else {
-                        let player_data = db_response.data.player.expect("Player data is missing");
+                        log::error!("Received error from PlayerDb: {}", db_response.message);
+                        error = Some(db_response.message);
+                    }
+                } else {
+                    let player_data = db_response.data.player.expect("Player data is missing");
 
-                        let db_err = web::block(move || {
-                            let mut conn = pool.get().expect("Failed to get connection from pool");
-                            db::add_guild_connection(
-                                &mut conn,
-                                discord_snowflake.clone(),
-                                guild_snowflake.clone(),
-                                player_data.id.as_str(),
-                            )
-                        })
-                        .await
-                        .expect("blocking error");
+                    let db_err = web::block(move || {
+                        let mut conn = pool.get().expect("Failed to get connection from pool");
+                        db::add_guild_connection(
+                            &mut conn,
+                            discord_snowflake.clone(),
+                            guild_snowflake.clone(),
+                            player_data.id.as_str(),
+                        )
+                    })
+                    .await
+                    .expect("blocking error");
 
-                        match db_err {
-                            Ok(()) => {
-                                log::info!(
-                                    "Link success: Discord: {}, Minecraft: {}",
-                                    discord_snowflake,
+                    match db_err {
+                        Ok(()) => {
+                            log::info!(
+                                "Link success: Discord: {}, Minecraft: {}",
+                                discord_snowflake,
+                                &player_data.username
+                            );
+                            return ctx
+                                .respond()
+                                .is_ephemeral(true)
+                                .content(format!(
+                                    "Successfully linked with user: `{}`",
                                     &player_data.username
-                                );
-                                return ctx
-                                    .respond()
-                                    .is_ephemeral(true)
-                                    .content(format!(
-                                        "Successfully linked with user: `{}`",
-                                        &player_data.username
-                                    ))
-                                    .finish();
-                            }
-                            Err(err) => {
-                                log::error!("Failed add guild connection: {:?}", err);
-                                error = Some("Internal Server Error".to_string());
-                            }
+                                ))
+                                .finish();
+                        }
+                        Err(err) => {
+                            log::error!("Failed add guild connection: {:?}", err);
+                            error = Some("Internal Server Error".to_string());
                         }
                     }
                 }
-                Err(err) => {
-                    log::error!("Failed to parse api response: {err}");
-                    error = Some("Internal Server Error".to_string());
-                }
             }
-        }
+            Err(err) => {
+                log::error!("Failed to parse api response: {err}");
+                error = Some("Internal Server Error".to_string());
+            }
+        },
         Err(err) => {
             log::error!("Failed to link! DiscordUser: {discord_snowflake}, Input: '{username_or_id}' - {err}");
             error = Some("Internal Server Error".to_string());

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::models::*;
+use crate::util::identifier::Identifier;
 use anyhow::Context;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
@@ -7,10 +7,10 @@ use diesel::RunQueryDsl;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use r2d2::Pool;
 use rusty_interaction::types::Snowflake;
+use std::collections::HashMap;
 use std::error::Error;
-use twilight_model::id::Id;
 use twilight_model::id::marker::UserMarker;
-use crate::util::identifier::Identifier;
+use twilight_model::id::Id;
 
 pub fn apply_migrations(
     pool: &Pool<ConnectionManager<SqliteConnection>>,
@@ -95,8 +95,8 @@ pub fn add_guild_connection(
         .execute(connection)
         .context("Failed to insert guild connection")?;
 
-    use crate::schema::minecraft_users::dsl::*;
     use crate::schema::minecraft_users::dsl::user_id;
+    use crate::schema::minecraft_users::dsl::*;
     diesel::insert_into(minecraft_users)
         .values(NewMinecraftUser {
             user_id: i64(user_snowflake_id),
@@ -150,12 +150,15 @@ pub fn remove_role_mapping(
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct  GuildRoleFilter {
+pub struct GuildRoleFilter {
     pub guild_id: Snowflake,
     pub role_id: Snowflake,
 }
 
-pub fn get_guild_users(connection: &mut SqliteConnection, filter: Option<GuildRoleFilter>) -> anyhow::Result<Vec<GuildUser>> {
+pub fn get_guild_users(
+    connection: &mut SqliteConnection,
+    filter: Option<GuildRoleFilter>,
+) -> anyhow::Result<Vec<GuildUser>> {
     use crate::schema::guild_users::dsl::*;
 
     let users: Vec<GuildUser>;
@@ -173,7 +176,10 @@ pub fn get_guild_users(connection: &mut SqliteConnection, filter: Option<GuildRo
     Ok(users)
 }
 
-pub fn get_role_mappings(connection: &mut SqliteConnection, filter: Option<GuildRoleFilter>) -> anyhow::Result<Vec<RoleMapping>> {
+pub fn get_role_mappings(
+    connection: &mut SqliteConnection,
+    filter: Option<GuildRoleFilter>,
+) -> anyhow::Result<Vec<RoleMapping>> {
     use crate::schema::role_mappings::dsl::*;
 
     let mappings: Vec<RoleMapping>;
@@ -185,25 +191,38 @@ pub fn get_role_mappings(connection: &mut SqliteConnection, filter: Option<Guild
             .load(connection)
             .context("Failed to load role mappings")?;
     } else {
-        mappings = query.load(connection).context("Failed to load role mappings")?;
+        mappings = query
+            .load(connection)
+            .context("Failed to load role mappings")?;
     }
 
     Ok(mappings)
 }
 
-pub fn map_minecraft_users(connection: &mut SqliteConnection, values: HashMap<Id<UserMarker>, Vec<Identifier>>) -> anyhow::Result<Vec<(String, Vec<Identifier>)>> {
+pub fn map_minecraft_users(
+    connection: &mut SqliteConnection,
+    values: HashMap<Id<UserMarker>, Vec<Identifier>>,
+) -> anyhow::Result<Vec<(String, Vec<Identifier>)>> {
     use crate::schema::minecraft_users::dsl::*;
 
-    let users = values.keys().map(|id| i64(id.to_string().parse::<Snowflake>().unwrap())).collect::<Vec<_>>();
+    let users = values
+        .keys()
+        .map(|id| i64(id.to_string().parse::<Snowflake>().unwrap()))
+        .collect::<Vec<_>>();
 
-    let result = minecraft_users.select((user_id, minecraft_uuid))
+    let result = minecraft_users
+        .select((user_id, minecraft_uuid))
         .filter(user_id.eq_any(users))
-        .load::<(i64, String)>(connection).context("Failed to load minecraft users")?;
+        .load::<(i64, String)>(connection)
+        .context("Failed to load minecraft users")?;
 
-    Ok(result.iter().map(|x| {
-        let id = x.0.to_string().parse::<Id<UserMarker>>().unwrap();
-        let uuid = x.1.clone();
+    Ok(result
+        .iter()
+        .map(|x| {
+            let id = x.0.to_string().parse::<Id<UserMarker>>().unwrap();
+            let uuid = x.1.clone();
 
-        (uuid, values.get(&id).unwrap().clone())
-    }).collect())
+            (uuid, values.get(&id).unwrap().clone())
+        })
+        .collect())
 }

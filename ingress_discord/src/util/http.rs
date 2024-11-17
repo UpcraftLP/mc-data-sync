@@ -1,11 +1,11 @@
 use crate::build_info;
-use once_cell::sync::Lazy;
-use std::env;
-use std::string::ToString;
 use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use reqwest::header;
 use reqwest::header::HeaderName;
 use serde::{Deserialize, Serialize};
+use std::env;
+use std::string::ToString;
 
 pub const USER_AGENT: Lazy<String> = Lazy::new(|| {
     let version = crate::version();
@@ -29,9 +29,18 @@ lazy_static! {
             let api_key = env::var("DATASYNC_API_KEY").expect("DATASYNC_API_KEY not set");
 
             let mut headers = header::HeaderMap::new();
-            headers.insert(header::ACCEPT, header::HeaderValue::from_static("application/json"));
-            headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
-            headers.insert(HeaderName::from_static("x-api-key"), header::HeaderValue::from_str(&api_key).expect("Failed to create X-Api-Key header"));
+            headers.insert(
+                header::ACCEPT,
+                header::HeaderValue::from_static("application/json"),
+            );
+            headers.insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_static("application/json"),
+            );
+            headers.insert(
+                HeaderName::from_static("x-api-key"),
+                header::HeaderValue::from_str(&api_key).expect("Failed to create X-Api-Key header"),
+            );
 
             headers
         })

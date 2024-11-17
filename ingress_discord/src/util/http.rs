@@ -62,3 +62,14 @@ pub struct RemoveUserEntitlementsInput {
     pub uuid: String,
     pub entitlements: Vec<String>,
 }
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateEntitlementInput {
+    pub namespace: String,
+    pub path: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct CreateEntitlementResponse {
+    pub id: String,
+}

@@ -1,5 +1,7 @@
 use crate::util::db::GuildRoleFilter;
-use crate::util::http::AddUserEntitlementsInput;
+use crate::util::http::{
+    AddUserEntitlementsInput, CreateEntitlementInput, CreateEntitlementResponse,
+};
 use crate::util::identifier::Identifier;
 use crate::util::{db, http};
 use diesel::r2d2::ConnectionManager;
@@ -98,7 +100,7 @@ pub async fn update_users(
     for data in update_state {
         client
             .post(format!(
-                "{api_url}/users/add-entitlements",
+                "{api_url}/v0/users/add-entitlements",
                 api_url = *API_URL
             ))
             .json(&data)
@@ -107,4 +109,22 @@ pub async fn update_users(
             .error_for_status()?;
     }
     Ok(())
+}
+
+pub async fn create_entitlement(id: &Identifier) -> anyhow::Result<CreateEntitlementResponse> {
+    let input = CreateEntitlementInput {
+        namespace: id.namespace.clone(),
+        path: id.path.clone(),
+    };
+
+    let client = http::client();
+    client
+        .put(format!("{api_url}/v0/entitlements", api_url = *API_URL))
+        .json(&input)
+        .send()
+        .await?
+        .error_for_status()?
+        .json::<CreateEntitlementResponse>()
+        .await
+        .map_err(Into::into)
 }

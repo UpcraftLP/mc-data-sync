@@ -11,6 +11,7 @@ use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::types::Snowflake;
 use rusty_interaction::{defer, slash_command};
+use std::future::IntoFuture;
 
 pub(crate) const COMMAND_NAME: &str = "add_role_mapping";
 
@@ -95,11 +96,25 @@ pub(crate) async fn add_role_mapping_command(
             .finish();
     }
 
+    if let Err(e) = members::create_entitlement(&reward_id).await {
+        log::error!("Failed to send create entitlement request for `{reward_id}`: {e}");
+        return ctx
+            .respond()
+            .is_ephemeral(true)
+            .content("HTTP ERROR: Failed to send web request!".to_string())
+            .finish();
+    }
+
     let filter = GuildRoleFilter {
         guild_id: guild_snowflake,
         role_id: role_snowflake,
     };
-    if let Err(e) = members::update_users(pool, Some(filter)).await {
+
+    if let Err(e) = web::block(move || members::update_users(pool, Some(filter)).into_future())
+        .await
+        .expect("blocking error")
+        .await
+    {
         log::error!("Failed to apply update to new users: {e}");
         return ctx.respond().is_ephemeral(true).content(format!("Successfully added reward `{reward_id}` for <@&{role_snowflake}>\n\n`ERROR:` Unable to update users, will retry later!```\n{e}\n```")).finish();
     }

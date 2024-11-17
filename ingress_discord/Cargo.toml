@@ -27,6 +27,9 @@ actix-web = { version = "4.9.0", features = ["rustls"] }
 r2d2 = "0.8.10"
 regex = "1.11.1"
 lazy_static = "1.5.0"
+twilight-http = { version = "0.15.4", default-features = false, features = ["decompression", "rustls-webpki-roots"] }
+twilight-model = "0.15.4"
+itertools = "0.13.0"
 
 [patch.crates-io]
 #rusty_interaction = { git = "https://github.com/showengineer/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }

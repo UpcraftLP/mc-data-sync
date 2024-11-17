@@ -37,11 +37,16 @@ async fn main() -> anyhow::Result<()> {
 
     let scheduler = JobScheduler::new().await?;
 
-    let job = Job::new("every 3 hours", |_uuid, _lock| {
-        if let Err(e) = members::update_users(None) {
-            log::error!("Failed to run scheduled user update: {e}");
-        }
-    })?;
+    let pool_clone = pool.clone();
+    let job = Job::new_async("every 3 hours", move |_uuid, _lock| Box::pin(
+        {
+            let value = pool_clone.clone();
+            async move {
+                if let Err(e) = members::update_users(value, None).await {
+                    log::error!("Failed to run scheduled user update: {e}");
+                }
+            }
+        }))?;
     scheduler.add(job).await?;
 
     scheduler.start().await?;

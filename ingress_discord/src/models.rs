@@ -53,7 +53,7 @@ pub struct NewGuildUser {
     pub guild_id: i64,
 }
 
-#[derive(Queryable, Selectable, Identifiable, Associations, PartialEq)]
+#[derive(Queryable, Selectable, Identifiable, Associations, PartialEq, Clone)]
 #[diesel(belongs_to(Guild))]
 #[diesel(table_name = crate::schema::role_mappings)]
 #[diesel(primary_key(id))]
@@ -73,4 +73,23 @@ pub struct NewRoleMapping {
     pub guild_id: i64,
     pub role_id: i64,
     pub role_reward: String,
+}
+
+#[derive(Queryable, Selectable, Identifiable, Associations, PartialEq, Clone)]
+#[diesel(belongs_to(User))]
+#[diesel(table_name = crate::schema::minecraft_users)]
+#[diesel(primary_key(user_id))]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct MinecraftUser {
+    pub user_id: i64,
+    pub minecraft_uuid: String,
+
+    pub created_at: NaiveDateTime,
+}
+
+#[derive(Insertable, AsChangeset)]
+#[diesel(table_name = crate::schema::minecraft_users)]
+pub struct NewMinecraftUser {
+    pub user_id: i64,
+    pub minecraft_uuid: String,
 }

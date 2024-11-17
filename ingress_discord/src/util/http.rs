@@ -38,7 +38,7 @@ lazy_static! {
             );
             headers.insert(
                 HeaderName::from_static("x-api-key"),
-                header::HeaderValue::from_str(&api_key).expect("Failed to create X-Api-Key header"),
+                header::HeaderValue::try_from(api_key).expect("Failed to create X-Api-Key header"),
             );
 
             headers

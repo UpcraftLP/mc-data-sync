@@ -96,7 +96,7 @@ public class HttpUtil {
         try {
             var response = getClient().send(request, HttpResponse.BodyHandlers.discarding());
             DataSyncMod.LOGGER.trace("HTTP {}:{} - {}", request.method(), response.statusCode(), request.uri());
-            if (response.statusCode() != 204) {
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 // TODO log exception message
                 throw new IOException("Unable to send data: received HTTP " + response.statusCode());
             }

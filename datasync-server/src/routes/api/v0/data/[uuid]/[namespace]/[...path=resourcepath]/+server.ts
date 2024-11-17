@@ -91,14 +91,8 @@ export const POST: RequestHandler = async ({ params, request }) => {
         include: {
             user: {
                 select: {
-                    id: true
-                },
-                include: {
-                    entitlements: {
-                        select: {
-                            id: true
-                        }
-                    }
+                    id: true,
+                    entitlements: true
                 }
             }
         }

@@ -51,8 +51,6 @@ pub async fn update_users(pool: Pool<ConnectionManager<SqliteConnection>>, filte
         // TODO this needs to be chained if it gets 1000 users at once
         // TODO error handling
         for member in CLIENT.guild_members(guild_id).limit(1000)?.await?.models().await? {
-            log::info!("Checking user {} in guild {}", member.user.id, guild_id);
-
             for mapping in &active_mappings {
                 if member.roles.contains(&mapping.role_id) {
                     desired_state.entry(member.user.id).or_default().push(mapping.reward_id.clone());

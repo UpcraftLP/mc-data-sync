@@ -31,7 +31,7 @@ lazy_static! {
             let mut headers = header::HeaderMap::new();
             headers.insert(header::ACCEPT, header::HeaderValue::from_static("application/json"));
             headers.insert(header::CONTENT_TYPE, header::HeaderValue::from_static("application/json"));
-            headers.insert(HeaderName::from_static("X-Api-Key"), header::HeaderValue::from_str(&api_key).expect("Failed to create X-Api-Key header"));
+            headers.insert(HeaderName::from_static("x-api-key"), header::HeaderValue::from_str(&api_key).expect("Failed to create X-Api-Key header"));
 
             headers
         })

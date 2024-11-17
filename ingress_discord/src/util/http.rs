@@ -29,6 +29,11 @@ lazy_static! {
 
             let mut headers = header::HeaderMap::new();
             headers.insert(
+                header::USER_AGENT,
+                header::HeaderValue::try_from(USER_AGENT.clone())
+                    .expect("Failed to create User-Agent header"),
+            );
+            headers.insert(
                 header::ACCEPT,
                 header::HeaderValue::from_static("application/json"),
             );

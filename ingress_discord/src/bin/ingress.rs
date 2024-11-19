@@ -8,6 +8,7 @@ use ingress_discord::util::{config, db};
 use ingress_discord::web;
 use r2d2::Pool;
 use std::env;
+use std::time::Duration;
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 #[tokio::main]
@@ -39,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
     let scheduler = JobScheduler::new().await?;
 
     let pool_clone = pool.clone();
-    let job = Job::new_async("every 3 hours", move |_uuid, _lock| {
+    let repeating_job = Job::new_async("every 3 hours", move |_uuid, _lock| {
         Box::pin({
             let value = pool_clone.clone();
             async move {
@@ -54,7 +55,25 @@ async fn main() -> anyhow::Result<()> {
             }
         })
     })?;
-    scheduler.add(job).await?;
+    scheduler.add(repeating_job).await?;
+
+    let pool_clone = pool.clone();
+    let startup_job = Job::new_one_shot_async(Duration::from_secs(15), move |_uuid, _lock| {
+        Box::pin({
+            let value = pool_clone.clone();
+            async move {
+                if let Err(e) =
+                    actix_web::web::block(move || members::update_users(value, None).into_future())
+                        .await
+                        .expect("blocking error")
+                        .await
+                {
+                    log::error!("Failed to run scheduled user update: {e}");
+                }
+            }
+        })
+    })?;
+    scheduler.add(startup_job).await?;
 
     scheduler.start().await?;
     web::server::start(handler, pool.clone(), 3000).await

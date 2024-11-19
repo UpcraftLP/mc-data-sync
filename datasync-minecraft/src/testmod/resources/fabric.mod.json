@@ -27,7 +27,7 @@
       "dev.upcraft.datasync.testmod.Testmod"
     ],
     "client": [
-      "dev.upcraft.datasync.testmod.Testmod"
+      "dev.upcraft.datasync.testmod.TestmodClient"
     ]
   },
   "depends": {

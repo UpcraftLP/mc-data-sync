@@ -32,19 +32,19 @@ sourceSets {
 loom {
     runs {
         configureEach {
+            runDir("run")
+            ideConfigGenerated(true)
             if (project.hasProperty('mc_java_agent_path')) {
                 vmArg("-javaagent:${project.findProperty('mc_java_agent_path')}")
             }
 
-            property("fabric.log.level", "trace")
+            property("fabric.log.level", "info")
             property("java.net.preferIPv4Stack", "true")
         }
 
         client {
             client()
             setConfigName("Fabric Client")
-            ideConfigGenerated(true)
-            runDir("run")
 
             if (project.hasProperty('mc_uuid')) {
                 programArg("--uuid=${project.findProperty('mc_uuid')}")
@@ -62,15 +62,11 @@ loom {
         server {
             server()
             setConfigName("Fabric Server")
-            ideConfigGenerated(true)
-            runDir("run")
         }
 
         testmodClient {
             client()
             setConfigName("Fabric Testmod Client")
-            ideConfigGenerated(true)
-            runDir("run")
             source(sourceSets.testmod)
 
             if (project.hasProperty('mc_uuid')) {
@@ -80,10 +76,12 @@ loom {
             if (project.hasProperty('mc_username')) {
                 programArg("--username=${project.findProperty('mc_username')}")
             }
+        }
 
-            if (project.hasProperty('mc_java_agent_path')) {
-                vmArg("-javaagent:${project.findProperty('mc_java_agent_path')}")
-            }
+        testmodServer {
+            server()
+            setConfigName("Fabric Testmod Server")
+            source(sourceSets.testmod)
         }
     }
 

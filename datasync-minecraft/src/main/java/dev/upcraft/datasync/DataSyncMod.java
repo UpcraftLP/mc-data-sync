@@ -1,11 +1,14 @@
 package dev.upcraft.datasync;
 
+import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
+import dev.upcraft.datasync.content.DataStore;
 import dev.upcraft.datasync.util.EntitlementsImpl;
 import dev.upcraft.datasync.util.ModHelper;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,8 @@ public class DataSyncMod implements ModInitializer {
     public static final SyncToken<Entitlements> ENTITLEMENTS_TOKEN = DataSyncAPI.register(Entitlements.class, DataSyncMod.ENTITLEMENTS_ID, EntitlementsImpl.CODEC);
 
     public static final Duration REQUEST_TIMEOUT = Duration.ofMillis(Long.getLong("datasync.request.timeout", 6000));
+    public static final boolean LOGIN_AUTOFETCH = !Boolean.getBoolean("datasync.login_autofetch.disable");
+    public static final boolean LOGIN_FORCE_REFRESH = Boolean.getBoolean("datasync.login_force_refresh");
 
     public static ResourceLocation dataId(String path) {
         return new ResourceLocation("datasync", path);
@@ -39,7 +44,12 @@ public class DataSyncMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (LOGIN_AUTOFETCH) {
+                GameProfile profile = handler.getPlayer().getGameProfile();
+                DataStore.refresh(profile.getId(), LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profile.getName(), profile.getId()));
+            }
+        });
     }
 
     private static boolean checkInternetAccess() {

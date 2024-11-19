@@ -15,6 +15,10 @@ public class DataSyncModClient implements ClientModInitializer {
     public static final SessionStore SESSION_STORE = new SessionStore();
 
     public static void preloadPlayerData() {
+        if (!DataSyncMod.LOGIN_AUTOFETCH) {
+            return;
+        }
+
         var profile = Minecraft.getInstance().getUser().getGameProfile();
 
         // if offline dont try to retrieve data
@@ -23,7 +27,7 @@ public class DataSyncModClient implements ClientModInitializer {
             return;
         }
 
-        DataStore.refresh(profile.getId(), false).exceptionally(t -> {
+        DataStore.refresh(profile.getId(), DataSyncMod.LOGIN_FORCE_REFRESH).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to preload player data", t);
             return null;
         });

@@ -44,7 +44,12 @@ export const GET: RequestHandler = async ({ params }) => {
 	});
 
 	if (data !== null) {
-		return Response.json(data.value);
+		return new Response(data.value, {
+			status: 200,
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
 	}
 
 	return Response.json(

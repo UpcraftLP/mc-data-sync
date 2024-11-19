@@ -210,13 +210,13 @@ pub fn map_minecraft_users(
         .map(|id| i64(id.to_string().parse::<Snowflake>().unwrap()))
         .collect::<Vec<_>>();
 
-    let result = minecraft_users
+    let users_with_linked_account = minecraft_users
         .select((user_id, minecraft_uuid))
         .filter(user_id.eq_any(users))
         .load::<(i64, String)>(connection)
         .context("Failed to load minecraft users")?;
 
-    Ok(result
+    Ok(users_with_linked_account
         .iter()
         .map(|x| {
             let id = x.0.to_string().parse::<Id<UserMarker>>().unwrap();
@@ -225,4 +225,33 @@ pub fn map_minecraft_users(
             (uuid, values.get(&id).unwrap().clone())
         })
         .collect())
+}
+
+pub fn user_marker_to_snowflake(marker: Id<UserMarker>) -> Snowflake {
+    marker
+        .to_string()
+        .parse()
+        .expect("Failed to convert marker to Snowflake")
+}
+
+pub fn get_minecraft_user(
+    conn: &mut SqliteConnection,
+    user: Id<UserMarker>,
+) -> anyhow::Result<Option<MinecraftUser>> {
+    let user_snowflake_id = user_marker_to_snowflake(user);
+    use crate::schema::minecraft_users::dsl::*;
+
+    match minecraft_users
+        .find(i64(user_snowflake_id))
+        .first::<MinecraftUser>(conn)
+    {
+        Ok(user) => Ok(Some(user)),
+        Err(e) => {
+            if e == diesel::NotFound {
+                Ok(None)
+            } else {
+                Err(e.into())
+            }
+        }
+    }
 }

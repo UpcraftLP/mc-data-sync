@@ -1,4 +1,5 @@
-use crate::util::db;
+use crate::discord::members;
+use crate::util::{db, snowflake_to_user_marker};
 use actix_web::web;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
@@ -82,8 +83,11 @@ pub(crate) async fn link_command(
                 } else {
                     let player_data = db_response.data.player.expect("Player data is missing");
 
-                    let db_err = web::block(move || {
-                        let mut conn = pool.get().expect("Failed to get connection from pool");
+                    let clone_pool = pool.clone();
+                    match web::block(move || {
+                        let mut conn = clone_pool
+                            .get()
+                            .expect("Failed to get connection from pool");
                         db::add_guild_connection(
                             &mut conn,
                             discord_snowflake,
@@ -92,23 +96,32 @@ pub(crate) async fn link_command(
                         )
                     })
                     .await
-                    .expect("blocking error");
-
-                    match db_err {
+                    .expect("blocking error")
+                    {
                         Ok(()) => {
-                            log::info!(
-                                "Link success: Discord: {}, Minecraft: {}",
-                                discord_snowflake,
-                                &player_data.username
-                            );
-                            return ctx
-                                .respond()
-                                .is_ephemeral(true)
-                                .content(format!(
-                                    "Successfully linked with user: `{}`",
+                            if let Err(e) = members::update_single_user(
+                                pool.clone(),
+                                snowflake_to_user_marker(discord_snowflake),
+                            )
+                            .await
+                            {
+                                log::error!("Failed to update user: {:?}", e);
+                                error = Some("Internal Server Error".to_string());
+                            } else {
+                                log::info!(
+                                    "Link success: Discord: {}, Minecraft: {}",
+                                    discord_snowflake,
                                     &player_data.username
-                                ))
-                                .finish();
+                                );
+                                return ctx
+                                    .respond()
+                                    .is_ephemeral(true)
+                                    .content(format!(
+                                        "Successfully linked with user: `{}`",
+                                        &player_data.username
+                                    ))
+                                    .finish();
+                            }
                         }
                         Err(err) => {
                             log::error!("Failed add guild connection: {:?}", err);

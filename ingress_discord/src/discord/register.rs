@@ -13,12 +13,7 @@ pub async fn update_global_commands(
     handler: &InteractionHandler,
     app_id: Snowflake,
 ) -> anyhow::Result<usize> {
-    let commands: Vec<ApplicationCommand> = vec![
-        SlashCommandDefinitionBuilder::default()
-            .name(commands::reload::COMMAND_NAME)
-            .description("Reload the commands")
-            .default_permission(false)
-            .build()?,
+    let mut commands: Vec<ApplicationCommand> = vec![
         SlashCommandDefinitionBuilder::default()
             .name(commands::link::COMMAND_NAME)
             .description("Link your Minecraft account")
@@ -50,6 +45,16 @@ pub async fn update_global_commands(
             )
             .build()?,
     ];
+
+    if commands::reload::enabled() {
+        commands.push(
+            SlashCommandDefinitionBuilder::default()
+                .name(commands::reload::COMMAND_NAME)
+                .description("Reload the commands")
+                .default_permission(false)
+                .build()?,
+        );
+    }
 
     let url = format!("{BASE_URL}/applications/{app_id}/commands");
     let response = handler

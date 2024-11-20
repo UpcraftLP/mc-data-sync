@@ -4,6 +4,7 @@ use lazy_static::lazy_static;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
+use tracing::{error, info};
 
 pub(crate) const COMMAND_NAME: &str = "reload";
 
@@ -52,7 +53,7 @@ pub(crate) async fn reload_command(
         }
     }
 
-    log::info!("Reloading commands");
+    info!("Reloading commands");
 
     match update_global_commands(handler, ctx.interaction.application_id.unwrap()).await {
         Ok(count) => ctx
@@ -60,8 +61,8 @@ pub(crate) async fn reload_command(
             .content(format!("Reloaded {count} commands"))
             .is_ephemeral(true)
             .finish(),
-        Err(e) => {
-            log::error!("Failed to reload commands: {e}");
+        Err(cause) => {
+            error!(%cause, "Failed to reload commands");
             ctx.respond()
                 .content("Failed to reload commands")
                 .is_ephemeral(true)

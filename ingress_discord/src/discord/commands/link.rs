@@ -10,6 +10,7 @@ use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
 use serde::{Deserialize, Serialize};
+use tracing::{error, info};
 use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
 
@@ -92,7 +93,7 @@ pub(crate) async fn link_command(
                     if db_response.code == "minecraft.invalid_username" {
                         error = Some(format!("No player found for '{}'", username_or_id));
                     } else {
-                        log::error!("Received error from PlayerDb: {}", db_response.message);
+                        error!("Received error from PlayerDb: {}", db_response.message);
                         error = Some(db_response.message);
                     }
                 } else {
@@ -114,7 +115,7 @@ pub(crate) async fn link_command(
                     .expect("blocking error")
                     {
                         Ok(()) => {
-                            if let Err(e) = members::update_single_user(
+                            if let Err(cause) = members::update_single_user(
                                 pool.clone(),
                                 snowflake_to_user_marker(discord_snowflake),
                                 snowflake_to_guild_marker(guild_snowflake),
@@ -122,13 +123,12 @@ pub(crate) async fn link_command(
                             )
                             .await
                             {
-                                log::error!("Failed to update user: {:?}", e);
+                                error!(%cause, "Failed to update user");
                                 error = Some("Internal Server Error".to_string());
                             } else {
-                                log::info!(
+                                info!(
                                     "Link success: Discord: {}, Minecraft: {}",
-                                    discord_snowflake,
-                                    &player_data.username
+                                    discord_snowflake, &player_data.username
                                 );
                                 return ctx
                                     .respond()
@@ -140,20 +140,20 @@ pub(crate) async fn link_command(
                                     .finish();
                             }
                         }
-                        Err(err) => {
-                            log::error!("Failed add guild connection: {:?}", err);
+                        Err(cause) => {
+                            error!(%cause, "Failed add guild connection");
                             error = Some("Internal Server Error".to_string());
                         }
                     }
                 }
             }
-            Err(err) => {
-                log::error!("Failed to parse api response: {err}");
+            Err(cause) => {
+                error!(%cause, "Failed to parse api response");
                 error = Some("Internal Server Error".to_string());
             }
         },
-        Err(err) => {
-            log::error!("Failed to link! DiscordUser: {discord_snowflake}, Input: '{username_or_id}' - {err}");
+        Err(cause) => {
+            error!(%cause, "Failed to link! DiscordUser: {discord_snowflake}, Input: '{username_or_id}'");
             error = Some("Internal Server Error".to_string());
         }
     }

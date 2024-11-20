@@ -1,6 +1,7 @@
 use anyhow::Context;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::Snowflake;
+use tracing::info;
 
 pub mod commands;
 pub mod members;
@@ -13,7 +14,7 @@ pub struct BotInfo {
 }
 
 pub async fn init() -> anyhow::Result<InteractionHandler> {
-    log::info!("Initializing Discord Module");
+    info!("Initializing Discord Module");
 
     let app_id: Snowflake = std::env::var("DISCORD_APP_ID")
         .context("DISCORD_APP_ID not set")?

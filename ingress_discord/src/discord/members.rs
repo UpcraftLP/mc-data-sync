@@ -11,6 +11,7 @@ use diesel::SqliteConnection;
 use lazy_static::lazy_static;
 use r2d2::Pool;
 use std::collections::HashMap;
+use tracing::info;
 use twilight_http::Client;
 use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use twilight_model::id::Id;
@@ -86,7 +87,7 @@ pub async fn update_users(
     pool: Pool<ConnectionManager<SqliteConnection>>,
     filter: Option<GuildRoleFilter>,
 ) -> anyhow::Result<()> {
-    log::info!("Updating users...");
+    info!("Updating users...");
 
     let mut conn = pool.get().expect("Failed to get connection from pool");
 
@@ -94,7 +95,7 @@ pub async fn update_users(
 
     let mut desired_state: HashMap<Id<UserMarker>, Vec<Identifier>> = HashMap::new();
     for (guild_id, active_mappings) in by_guild {
-        log::info!("Checking guild {}", guild_id);
+        info!("Checking guild {}", guild_id);
 
         // TODO this needs to be chained if it gets 1000 users at once
         // TODO error handling

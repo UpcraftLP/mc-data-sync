@@ -9,6 +9,7 @@ use r2d2::Pool;
 use rusty_interaction::types::Snowflake;
 use std::collections::HashMap;
 use std::error::Error;
+use tracing::info;
 use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
 
@@ -20,9 +21,9 @@ pub fn apply_migrations(
     let mut connection = pool.get()?;
 
     if connection.has_pending_migration(MIGRATIONS)? {
-        log::info!("Running database migrations...");
+        info!("Running database migrations...");
         connection.run_pending_migrations(MIGRATIONS)?;
-        log::info!("done!");
+        info!("done!");
     }
 
     Ok(())

@@ -7,6 +7,7 @@ use diesel::SqliteConnection;
 use r2d2::Pool;
 use rusty_interaction::types::Snowflake;
 use serde::{Deserialize, Serialize};
+use tracing::error;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct RoleMappingInput {
@@ -20,8 +21,8 @@ pub async fn register_role_mapping(
     body: String,
     pool: Pool<ConnectionManager<SqliteConnection>>,
 ) -> actix_web::Result<HttpResponse> {
-    let input = serde_json::from_str::<RoleMappingInput>(&body).map_err(|e| {
-        log::error!("Failed to parse JSON body: {e}");
+    let input = serde_json::from_str::<RoleMappingInput>(&body).map_err(|cause| {
+        error!(%cause, "Failed to parse JSON body");
         actix_web::error::ErrorBadRequest("Failed to parse JSON body")
     })?;
 
@@ -38,8 +39,8 @@ pub async fn register_role_mapping(
         let mut conn = pool.get().expect("Failed to get connection from pool");
 
         db::register_role_mapping(&mut conn, input.role_id, input.guild_id, &reward_id)
-            .unwrap_or_else(|e| {
-                log::error!("Failed to register role mapping: {e}");
+            .unwrap_or_else(|cause| {
+                error!(%cause, "Failed to register role mapping");
             });
     })
     .await

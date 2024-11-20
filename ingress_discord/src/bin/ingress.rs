@@ -10,14 +10,13 @@ use r2d2::Pool;
 use std::env;
 use std::time::Duration;
 use tokio_cron_scheduler::{Job, JobScheduler};
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    ingress_discord::init();
+    ingress_discord::init("ingress_discord");
 
-    env_logger::try_init_from_env(env_logger::Env::new().default_filter_or("info"))?;
-
-    log::info!("Starting Discord Ingress v{}", ingress_discord::version());
+    info!("Starting Discord Ingress v{}", ingress_discord::version());
 
     let cfg = config::load()?;
 
@@ -35,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
 
     handler.add_data(pool.clone());
     let app_info = handler.data.get::<BotInfo>().expect("AppInfo not found");
-    log::info!("Discord Application ID: {}", app_info.app_id);
+    info!("Discord Application ID: {}", app_info.app_id);
 
     let scheduler = JobScheduler::new().await?;
 
@@ -44,13 +43,13 @@ async fn main() -> anyhow::Result<()> {
         Box::pin({
             let value = pool_clone.clone();
             async move {
-                if let Err(e) =
+                if let Err(cause) =
                     actix_web::web::block(move || members::update_users(value, None).into_future())
                         .await
                         .expect("blocking error")
                         .await
                 {
-                    log::error!("Failed to run scheduled user update: {e}");
+                    error!(%cause, "Failed to run scheduled user update");
                 }
             }
         })
@@ -62,13 +61,13 @@ async fn main() -> anyhow::Result<()> {
         Box::pin({
             let value = pool_clone.clone();
             async move {
-                if let Err(e) =
+                if let Err(cause) =
                     actix_web::web::block(move || members::update_users(value, None).into_future())
                         .await
                         .expect("blocking error")
                         .await
                 {
-                    log::error!("Failed to run scheduled user update: {e}");
+                    error!(%cause, "Failed to run scheduled user update");
                 }
             }
         })

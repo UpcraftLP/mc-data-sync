@@ -7,14 +7,12 @@ build = "build.rs"
 anyhow = "1.0.91"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenvy = "0.15.7"
-log = { version = "0.4.22", features = ["serde"] }
 rusty_interaction = { version = "0.3.0", features = ["handler", "rustls"] }
 serde = { version = "1.0.213", features = ["derive"] }
-thiserror = "1.0.65"
-tokio = { version = "1.41.0", features = ["full"] }
-tokio-cron-scheduler = { version = "0.13.0", features = ["log", "english", "tracing-subscriber"] }
-env_logger = "0.11.5"
-tracing-subscriber = { version = "0.3.18", features = ["chrono", "json"] }
+thiserror = "2.0.3"
+tokio = { version = "1.41.1", features = ["full"] }
+tokio-cron-scheduler = { version = "0.13.0", features = ["english", "tracing-subscriber"] }
+tracing-subscriber = { version = "0.3.18", features = ["chrono", "env-filter", "json"] }
 reqwest = { version = "0.12.8", default-features = false, features = ["json", "rustls-tls"] }
 diesel = { version = "2.2.4", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "chrono", "serde_json", "r2d2"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
@@ -29,6 +27,7 @@ lazy_static = "1.5.0"
 twilight-http = { version = "0.15.4", default-features = false, features = ["decompression", "rustls-webpki-roots"] }
 twilight-model = "0.15.4"
 itertools = "0.13.0"
+tracing = { version = "0.1.40", features = ["async-await"] }
 
 [patch.crates-io]
 #rusty_interaction = { git = "https://github.com/showengineer/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }

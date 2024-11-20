@@ -12,6 +12,7 @@ use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::types::Snowflake;
 use rusty_interaction::{defer, slash_command};
 use std::future::IntoFuture;
+use tracing::{error, info};
 
 pub(crate) const COMMAND_NAME: &str = "add_role_mapping";
 
@@ -62,7 +63,7 @@ pub(crate) async fn add_role_mapping_command(
         .parse()
         .expect("role is not a valid Snowflake");
 
-    log::info!("Adding role mapping for reward_id: {reward_id} and role: {role_snowflake}");
+    info!("Adding role mapping for reward_id: {reward_id} and role: {role_snowflake}");
 
     let reward_id_clone = reward_id.clone();
     let clone_pool = pool.clone();
@@ -85,8 +86,8 @@ pub(crate) async fn add_role_mapping_command(
     .await
     .expect("blocking error");
 
-    if let Err(e) = db_err {
-        log::error!("Failed to add role mapping `{role_snowflake}->{reward_id}`: {e}");
+    if let Err(cause) = db_err {
+        error!(%cause, "Failed to add role mapping `{role_snowflake}->{reward_id}`");
         return ctx
             .respond()
             .is_ephemeral(true)
@@ -96,8 +97,8 @@ pub(crate) async fn add_role_mapping_command(
             .finish();
     }
 
-    if let Err(e) = members::create_entitlement(&reward_id).await {
-        log::error!("Failed to send create entitlement request for `{reward_id}`: {e}");
+    if let Err(cause) = members::create_entitlement(&reward_id).await {
+        error!(%cause, "Failed to send create entitlement request for `{reward_id}`");
         return ctx
             .respond()
             .is_ephemeral(true)
@@ -110,13 +111,13 @@ pub(crate) async fn add_role_mapping_command(
         role_id: role_snowflake,
     };
 
-    if let Err(e) = web::block(move || members::update_users(pool, Some(filter)).into_future())
+    if let Err(cause) = web::block(move || members::update_users(pool, Some(filter)).into_future())
         .await
         .expect("blocking error")
         .await
     {
-        log::error!("Failed to apply update to new users: {e}");
-        return ctx.respond().is_ephemeral(true).content(format!("Successfully added reward `{reward_id}` for <@&{role_snowflake}>\n\n`ERROR:` Unable to update users, will retry later!```\n{e}\n```")).finish();
+        error!(%cause, "Failed to apply update to new users");
+        return ctx.respond().is_ephemeral(true).content(format!("Successfully added reward `{reward_id}` for <@&{role_snowflake}>\n\n`ERROR:` Unable to update users, will retry later!```\n{cause}\n```")).finish();
     }
 
     ctx.respond()

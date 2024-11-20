@@ -6,7 +6,6 @@ use crate::util::http::{
 use crate::util::identifier::Identifier;
 use crate::util::{db, http};
 use actix_web::web;
-use anyhow::Context;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use lazy_static::lazy_static;
@@ -170,27 +169,18 @@ pub async fn update_single_user(
     .expect("blocking error")?;
     let mut desired_state: Vec<Identifier> = Vec::new();
     for (guild_id, active_mappings) in by_guild {
-        let roles_tmp: Vec<Id<RoleMarker>>;
+        // if we already have the roles, no need to query again
         if guild_id == guild {
-            roles_tmp = roles.to_owned().to_vec();
-        } else {
-            match CLIENT
-                .guild_member(guild_id, user_snowflake)
-                .await
-                .with_context(|| format!("Discord user: {user_snowflake}"))
-            {
-                Ok(result) => {
-                    let member = result.model().await?;
-                    roles_tmp = member.roles;
-                }
-                Err(e) => {
-                    log::error!("Failed to get member info for {user_snowflake}: {e:?}");
-                    continue;
-                }
-            }
+            desired_state.extend(get_desired_state(roles, &active_mappings));
+            continue;
         }
 
-        desired_state.extend(get_desired_state(&roles_tmp, &active_mappings));
+        // else try to get the member from discord.
+        // this will return an error if the user is not in the guild, so we ignore that
+        if let Ok(result) = CLIENT.guild_member(guild_id, user_snowflake).await {
+            let member = result.model().await?;
+            desired_state.extend(get_desired_state(&member.roles, &active_mappings));
+        }
     }
 
     let data = AddUserEntitlementsInput {

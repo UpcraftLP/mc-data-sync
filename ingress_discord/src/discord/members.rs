@@ -6,14 +6,13 @@ use crate::util::http::{
 use crate::util::identifier::Identifier;
 use crate::util::{db, http};
 use actix_web::web;
+use anyhow::Context;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use lazy_static::lazy_static;
 use r2d2::Pool;
 use std::collections::HashMap;
-use anyhow::{Context, Error};
-use twilight_http::{Client, Response};
-use twilight_model::guild::Member;
+use twilight_http::Client;
 use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use twilight_model::id::Id;
 
@@ -70,7 +69,7 @@ fn role_mappings_by_guild(
 }
 
 fn get_desired_state(
-    roles: &Vec<Id<RoleMarker>>,
+    roles: &[Id<RoleMarker>],
     active_mappings: &Vec<DiscordRoleMapping>,
 ) -> Vec<Identifier> {
     let mut result: Vec<Identifier> = Vec::new();
@@ -107,7 +106,7 @@ pub async fn update_users(
             .models()
             .await?
         {
-            let member_desired_state = get_desired_state(&member, &active_mappings);
+            let member_desired_state = get_desired_state(&member.roles, &active_mappings);
             if !member_desired_state.is_empty() {
                 desired_state
                     .entry(member.user.id)
@@ -146,7 +145,7 @@ pub async fn update_single_user(
     pool: Pool<ConnectionManager<SqliteConnection>>,
     user_snowflake: Id<UserMarker>,
     guild: Id<GuildMarker>,
-    roles: &Vec<Id<RoleMarker>>,
+    roles: &[Id<RoleMarker>],
 ) -> anyhow::Result<()> {
     // first check if user even has a minecraft account linked
     let clone_pool = pool.clone();
@@ -156,8 +155,8 @@ pub async fn update_single_user(
             .expect("Failed to get connection from pool");
         db::get_minecraft_user(&mut conn, user_snowflake)
     })
-        .await
-        .expect("blocking error")?
+    .await
+    .expect("blocking error")?
     else {
         // TODO do we need better handling here?
         return Ok(());
@@ -167,22 +166,21 @@ pub async fn update_single_user(
         let mut conn = pool.get().expect("Failed to get connection from pool");
         role_mappings_by_guild(&mut conn, None)
     })
-        .await
-        .expect("blocking error")?;
+    .await
+    .expect("blocking error")?;
     let mut desired_state: Vec<Identifier> = Vec::new();
     for (guild_id, active_mappings) in by_guild {
         let roles_tmp: Vec<Id<RoleMarker>>;
-        if (guild_id == guild) {
-            roles_tmp = roles.clone();
+        if guild_id == guild {
+            roles_tmp = roles.to_owned().to_vec();
         } else {
             match CLIENT
                 .guild_member(guild_id, user_snowflake)
                 .await
-                .with_context(|| format!("Discord user: {user_snowflake}")) {
+                .with_context(|| format!("Discord user: {user_snowflake}"))
+            {
                 Ok(result) => {
-                    let member = result
-                        .model()
-                        .await?;
+                    let member = result.model().await?;
                     roles_tmp = member.roles;
                 }
                 Err(e) => {

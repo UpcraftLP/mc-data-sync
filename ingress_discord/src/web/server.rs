@@ -32,16 +32,6 @@ pub async fn start(
                        handler.interaction(req, body).await
                    }),
             )
-            .route("/api/register-role-mapping",
-                   web::post().to(|data: web::Data<Mutex<ServerData>>, req: HttpRequest, body: String| async move {
-                       let pool: Pool<ConnectionManager<SqliteConnection>>;
-                       {
-                           let data = data.lock().unwrap();
-                           pool = data.pool.clone();
-                       }
-                       crate::web::api::register_role_mapping(req, body, pool).await
-                   }),
-            )
     })
         .bind(format!("0.0.0.0:{}", port))?
         .run()

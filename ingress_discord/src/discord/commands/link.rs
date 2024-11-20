@@ -1,5 +1,5 @@
 use crate::discord::members;
-use crate::util::{db, snowflake_to_user_marker};
+use crate::util::{db, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker};
 use actix_web::web;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
@@ -8,6 +8,8 @@ use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
 use serde::{Deserialize, Serialize};
+use twilight_model::id::Id;
+use twilight_model::id::marker::RoleMarker;
 
 pub(crate) const COMMAND_NAME: &str = "link";
 
@@ -60,6 +62,8 @@ pub(crate) async fn link_command(
         .guild_id
         .expect("must run commands within a guild");
 
+    let roles: Vec<Id<RoleMarker>> = ctx.interaction.member.clone().expect("must run commands within a guild").roles.clone().iter().map(|&sf| snowflake_to_role_marker(sf)).collect();
+
     let name_option = opts
         .iter()
         .find(|&o| o.name == "username")
@@ -102,6 +106,8 @@ pub(crate) async fn link_command(
                             if let Err(e) = members::update_single_user(
                                 pool.clone(),
                                 snowflake_to_user_marker(discord_snowflake),
+                                snowflake_to_guild_marker(guild_snowflake),
+                                roles,
                             )
                             .await
                             {

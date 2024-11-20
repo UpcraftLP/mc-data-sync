@@ -11,7 +11,8 @@ use diesel::SqliteConnection;
 use lazy_static::lazy_static;
 use r2d2::Pool;
 use std::collections::HashMap;
-use twilight_http::Client;
+use anyhow::{Context, Error};
+use twilight_http::{Client, Response};
 use twilight_model::guild::Member;
 use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use twilight_model::id::Id;
@@ -69,12 +70,12 @@ fn role_mappings_by_guild(
 }
 
 fn get_desired_state(
-    guild_member: &Member,
+    roles: &Vec<Id<RoleMarker>>,
     active_mappings: &Vec<DiscordRoleMapping>,
 ) -> Vec<Identifier> {
     let mut result: Vec<Identifier> = Vec::new();
     for mapping in active_mappings {
-        if guild_member.roles.contains(&mapping.role_id) {
+        if roles.contains(&mapping.role_id) {
             result.push(mapping.reward_id.clone());
         }
     }
@@ -144,6 +145,8 @@ pub async fn update_users(
 pub async fn update_single_user(
     pool: Pool<ConnectionManager<SqliteConnection>>,
     user_snowflake: Id<UserMarker>,
+    guild: Id<GuildMarker>,
+    roles: &Vec<Id<RoleMarker>>,
 ) -> anyhow::Result<()> {
     // first check if user even has a minecraft account linked
     let clone_pool = pool.clone();
@@ -153,8 +156,8 @@ pub async fn update_single_user(
             .expect("Failed to get connection from pool");
         db::get_minecraft_user(&mut conn, user_snowflake)
     })
-    .await
-    .expect("blocking error")?
+        .await
+        .expect("blocking error")?
     else {
         // TODO do we need better handling here?
         return Ok(());
@@ -164,16 +167,32 @@ pub async fn update_single_user(
         let mut conn = pool.get().expect("Failed to get connection from pool");
         role_mappings_by_guild(&mut conn, None)
     })
-    .await
-    .expect("blocking error")?;
+        .await
+        .expect("blocking error")?;
     let mut desired_state: Vec<Identifier> = Vec::new();
     for (guild_id, active_mappings) in by_guild {
-        let member = CLIENT
-            .guild_member(guild_id, user_snowflake)
-            .await?
-            .model()
-            .await?;
-        desired_state.extend(get_desired_state(&member, &active_mappings));
+        let roles_tmp: Vec<Id<RoleMarker>>;
+        if (guild_id == guild) {
+            roles_tmp = roles.clone();
+        } else {
+            match CLIENT
+                .guild_member(guild_id, user_snowflake)
+                .await
+                .with_context(|| format!("Discord user: {user_snowflake}")) {
+                Ok(result) => {
+                    let member = result
+                        .model()
+                        .await?;
+                    roles_tmp = member.roles;
+                }
+                Err(e) => {
+                    log::error!("Failed to get member info for {user_snowflake}: {e:?}");
+                    continue;
+                }
+            }
+        }
+
+        desired_state.extend(get_desired_state(&roles_tmp, &active_mappings));
     }
 
     let data = AddUserEntitlementsInput {

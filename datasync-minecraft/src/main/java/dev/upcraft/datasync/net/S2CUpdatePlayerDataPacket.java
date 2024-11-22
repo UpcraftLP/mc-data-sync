@@ -66,6 +66,8 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
 
     @Override
     public void write(FriendlyByteBuf buf) {
+        buf.writeUUID(this.targetId());
+
         if (this.dataTypeId() != null) {
             buf.writeBoolean(true);
             buf.writeResourceLocation(this.dataTypeId());

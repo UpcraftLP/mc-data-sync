@@ -17,12 +17,16 @@ public class DataStore {
 
     @SuppressWarnings("unchecked")
     public static <T> StoredDataHolder<T> getPlayerLookup(UUID playerId, DataType<T> type) {
-        return (StoredDataHolder<T>) (globalStore.computeIfAbsent(playerId, key -> new HashMap<>()).computeIfAbsent(type.id(), id -> StoredDataHolder.load(type, playerId)));
+        synchronized (globalStore) {
+            return (StoredDataHolder<T>) (globalStore.computeIfAbsent(playerId, key -> new HashMap<>()).computeIfAbsent(type.id(), id -> StoredDataHolder.load(type, playerId)));
+        }
     }
 
     @SuppressWarnings("unchecked")
     public static <T> StoredDataHolder<T> getPlayerLookupEmpty(UUID playerId, DataType<T> type) {
-        return (StoredDataHolder<T>) (globalStore.computeIfAbsent(playerId, key -> new HashMap<>()).computeIfAbsent(type.id(), id -> StoredDataHolder.ofValue(type, playerId, null)));
+        synchronized (globalStore) {
+            return (StoredDataHolder<T>) (globalStore.computeIfAbsent(playerId, key -> new HashMap<>()).computeIfAbsent(type.id(), id -> StoredDataHolder.ofValue(type, playerId, null)));
+        }
     }
 
     public static <T> StoredDataHolder<T> lookup(UUID playerId, DataType<T> type, boolean forceRefresh) {

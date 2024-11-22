@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.api.SyncToken;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
@@ -29,5 +30,10 @@ public class DataRegistry {
 
     public static Collection<DataType<?>> values() {
         return VALUES_VIEW;
+    }
+
+    @Nullable
+    public static DataType<?> getById(ResourceLocation id) {
+        return DATA_TYPES.get(id);
     }
 }

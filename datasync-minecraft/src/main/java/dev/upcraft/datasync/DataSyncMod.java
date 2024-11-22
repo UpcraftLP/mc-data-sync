@@ -5,10 +5,12 @@ import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
 import dev.upcraft.datasync.content.DataStore;
+import dev.upcraft.datasync.net.C2SUpdatePlayerDataPacket;
 import dev.upcraft.datasync.util.EntitlementsImpl;
 import dev.upcraft.datasync.util.ModHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +52,7 @@ public class DataSyncMod implements ModInitializer {
                 DataStore.refresh(profile.getId(), LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profile.getName(), profile.getId()));
             }
         });
+        ServerPlayNetworking.registerGlobalReceiver(C2SUpdatePlayerDataPacket.TYPE, C2SUpdatePlayerDataPacket::handle);
     }
 
     private static boolean checkInternetAccess() {

@@ -4,9 +4,11 @@ import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.api.util.GameProfileHelper;
 import dev.upcraft.datasync.content.DataStore;
+import dev.upcraft.datasync.net.S2CUpdatePlayerDataPacket;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 
 @Environment(EnvType.CLIENT)
@@ -39,6 +41,6 @@ public class DataSyncModClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-
+        ClientPlayNetworking.registerGlobalReceiver(S2CUpdatePlayerDataPacket.TYPE, S2CUpdatePlayerDataPacket::handle);
     }
 }

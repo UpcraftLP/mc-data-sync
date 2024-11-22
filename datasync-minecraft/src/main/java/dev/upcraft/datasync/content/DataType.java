@@ -7,9 +7,11 @@ import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.GameProfileHelper;
 import dev.upcraft.datasync.client.DataSyncModClient;
+import dev.upcraft.datasync.net.C2SUpdatePlayerDataPacket;
 import dev.upcraft.datasync.web.HttpUtil;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -67,12 +69,13 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
                 session = loginAttempt.orThrow();
             }
             return builder.header("Authorization", "Bearer %s".formatted(session.accessToken()));
-        })).exceptionally(t -> {
+        })).thenRunAsync(() -> {
+            C2SUpdatePlayerDataPacket.trySend(this.id());
+        }, Minecraft.getInstance()).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to send data update for {}, restoring previous state", this.id(), t);
             lookup.setValue(previous);
             return null;
         });
-        // TODO if installed on server, send packet to cause immediate sync
     }
 
     @Nullable

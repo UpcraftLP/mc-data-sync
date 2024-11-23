@@ -15,3 +15,8 @@ stonecutter.registerChiseled tasks.register("chiseledPublish", stonecutter.chise
     setGroup "project"
     ofTask "publish"
 }
+
+stonecutter.registerChiseled tasks.register("chiseledPublishToMavenLocal", stonecutter.chiseled) {
+    setGroup "project"
+    ofTask "publishToMavenLocal"
+}

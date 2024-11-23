@@ -10,32 +10,37 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        # Use these Java versions
-        java: [
-          21,    # Current Java LTS
-        ]
+    env:
+      JAVA_VERSION: 21
     runs-on: ubuntu-22.04
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
-      - name: setup jdk ${{ matrix.java }}
+      - name: setup java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ matrix.java }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'microsoft'
       - name: make gradle wrapper executable
         working-directory: datasync-minecraft
         run: chmod +x ./gradlew
       - name: build
         working-directory: datasync-minecraft
-        run: ./gradlew build
-      - name: capture build artifacts
-        if: ${{ matrix.java == '21' }} # Only upload artifacts built from latest java
+        run: ./gradlew chiseledBuild
+      - name: Upload artifacts (Fabric 1.19.2)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-Fabric-${{ github.sha }}
-          path: datasync-minecraft/build/libs/*.jar
+          name: ${{ github.event.repository.name }}-1.19.2-Fabric-${{ github.sha }}
+          path: datasync-minecraft/versions/1.19.2-fabric/build/libs/*.jar
+      - name: Upload artifacts (Fabric 1.20.1)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-1.20.1-Fabric-${{ github.sha }}
+          path: datasync-minecraft/versions/1.20.1-fabric/build/libs/*.jar
+      - name: Upload artifacts (Fabric 1.21.1)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-1.21.1-Fabric-${{ github.sha }}
+          path: datasync-minecraft/versions/1.21.1-fabric/build/libs/*.jar

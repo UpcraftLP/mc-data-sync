@@ -9,7 +9,12 @@ public class ModHelper {
 
     private static final String FABRIC_LOADER_ID = "fabricloader";
     private static final String QUILT_LOADER_ID = "quilt_loader";
-    private static final String FORGE_LOADER_ID = "forge"; // TODO switch to neoforge when updating to 1.21
+
+    //? >1.20.1 {
+    private static final String FORGE_LOADER_ID = "neoforge";
+    //?} else {
+    /*private static final String FORGE_LOADER_ID = "forge";
+    *///?}
 
     public static ModMetadata getMeta(String modid) {
         return FabricLoader.getInstance().getModContainer(modid).orElseThrow(() -> new NoSuchElementException("Unable to find mod container for ID '%s'".formatted(modid))).getMetadata();

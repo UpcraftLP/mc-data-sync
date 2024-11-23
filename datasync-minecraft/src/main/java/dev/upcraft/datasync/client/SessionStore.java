@@ -8,9 +8,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.upcraft.datasync.DataSyncMod;
+import dev.upcraft.datasync.api.util.GameProfileHelper;
 import dev.upcraft.datasync.web.HttpUtil;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.UUIDUtil;
 import net.minecraft.util.ExtraCodecs;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,7 +27,7 @@ public class SessionStore {
     ).apply(instance, Pair::of));
 
     private static final Codec<Session> SESSION_TOKEN_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            UUIDUtil.STRING_CODEC.fieldOf("user_id").forGetter(Session::userId),
+            HttpUtil.UUID_CODEC.fieldOf("user_id").forGetter(Session::userId),
             Codec.STRING.fieldOf("session_token").forGetter(Session::accessToken),
             ExtraCodecs.INSTANT_ISO8601.fieldOf("expires_at").forGetter(Session::expiresAt)
     ).apply(instance, Session::new));
@@ -56,7 +56,8 @@ public class SessionStore {
         }
 
         var mcSession = Minecraft.getInstance().getUser();
-        var profile = Minecraft.getInstance().getGameProfile();
+
+        var profile = GameProfileHelper.getClientProfile();
         var profileId = profile.getId().toString();
         var challengeReqData = new JsonObject();
         challengeReqData.addProperty("id", profileId);
@@ -71,7 +72,11 @@ public class SessionStore {
 
         var challenge = opt.get().getFirst();
         try {
+            //? >=1.21 {
             Minecraft.getInstance().getMinecraftSessionService().joinServer(profile.getId(), mcSession.getAccessToken(), challenge);
+            //?} else {
+            /*Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getAccessToken(), challenge);
+            *///?}
         } catch (AuthenticationException e) {
             DataSyncMod.LOGGER.error("Unable to authenticate", e);
             cooldownUntil = Instant.now().plus(30, ChronoUnit.SECONDS);

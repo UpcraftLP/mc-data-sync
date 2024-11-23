@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class Testmod implements ModInitializer {
 
-    public static final String MODID = "testmod";
+    public static final String MOD_ID = "testmod";
     public static final SyncToken<SupporterData> SUPPORTER_DATA_SYNC_TOKEN = DataSyncAPI.register(SupporterData.class, Testmod.id("test_data"), SupporterData.CODEC);
 
     @Override
@@ -43,6 +43,10 @@ public class Testmod implements ModInitializer {
     }
 
     public static ResourceLocation id(String path) {
-        return new ResourceLocation(MODID, path);
+        //? <1.21 {
+        /*return new ResourceLocation(MOD_ID, path);
+         *///?} else {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        //?}
     }
 }

@@ -3,6 +3,9 @@ package dev.upcraft.datasync.web;
 import com.google.common.base.Suppliers;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.Lifecycle;
 import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.util.ModHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -18,6 +21,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Supplier;
@@ -172,4 +176,16 @@ public class HttpUtil {
     public static String urlEncode(ResourceLocation id) {
         return id.getNamespace() + '/' + id.getPath();
     }
+
+    public static final Codec<UUID> UUID_CODEC = Codec.STRING.comapFlatMap(string -> {
+        try {
+            return DataResult.success(UUID.fromString(string), Lifecycle.stable());
+        } catch (IllegalArgumentException var2) {
+            //? >=1.20.1 {
+            return DataResult.error(() -> "Invalid UUID " + string + ": " + var2.getMessage());
+            //?} else {
+            /*return DataResult.error("Invalid UUID " + string + ": " + var2.getMessage());
+            *///?}
+        }
+    }, UUID::toString);
 }

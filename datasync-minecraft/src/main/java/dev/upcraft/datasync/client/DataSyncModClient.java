@@ -20,7 +20,7 @@ public class DataSyncModClient implements ClientModInitializer {
             return;
         }
 
-        var profile = Minecraft.getInstance().getGameProfile();
+        var profile = getCurrentPlayerProfile();
 
         // if offline dont try to retrieve data
         if (GameProfileHelper.isOfflineProfile(profile)) {
@@ -35,7 +35,11 @@ public class DataSyncModClient implements ClientModInitializer {
     }
 
     public static GameProfile getCurrentPlayerProfile() {
+        //? <1.21 {
+        /*return Minecraft.getInstance().getUser().getGameProfile();
+        *///?} else {
         return Minecraft.getInstance().getGameProfile();
+        //?}
     }
 
     @Override

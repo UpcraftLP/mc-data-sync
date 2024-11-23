@@ -9,7 +9,7 @@ import net.minecraft.core.UUIDUtil;
 public class GameProfileHelper {
 
     public static boolean isOfflineProfile(GameProfile profile) {
-        return !profile.isComplete() || UUIDUtil.createOfflinePlayerUUID(profile.getName()).equals(profile.getId());
+        return UUIDUtil.createOfflinePlayerUUID(profile.getName()).equals(profile.getId());
     }
 
     @Environment(EnvType.CLIENT)

@@ -8,22 +8,20 @@ import dev.upcraft.datasync.content.DataType;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocation dataTypeId) implements CustomPacketPayload {
+public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocation dataTypeId) {
 
     public static final ResourceLocation ID = DataSyncMod.id("s2c_update_player_data");
-    public static final CustomPacketPayload.Type<S2CUpdatePlayerDataPacket> TYPE = new Type<>(ID);
-    public static final StreamCodec<RegistryFriendlyByteBuf, S2CUpdatePlayerDataPacket> CODEC = StreamCodec.ofMember(S2CUpdatePlayerDataPacket::write, S2CUpdatePlayerDataPacket::fromNetwork);
 
     public boolean refreshAll() {
         return this.dataTypeId() == null;
@@ -31,22 +29,28 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
 
     public static void send(ServerPlayer p, UUID origin, @Nullable ResourceLocation id) {
         if (ServerPlayNetworking.canSend(p, ID)) {
-            ServerPlayNetworking.send(p, new S2CUpdatePlayerDataPacket(origin, id));
+            var packet = new S2CUpdatePlayerDataPacket(origin, id);
+            var buf = PacketByteBufs.create();
+            packet.write(buf);
+            ServerPlayNetworking.send(p, ID, buf);
         }
     }
 
     @Environment(EnvType.CLIENT)
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(TYPE, CODEC);
-        ClientPlayNetworking.registerGlobalReceiver(TYPE, S2CUpdatePlayerDataPacket::handle);
+        ClientPlayNetworking.registerGlobalReceiver(ID, (client, handler, buf, responseSender) -> {
+            var packet = S2CUpdatePlayerDataPacket.fromNetwork(buf);
+            client.submit(() -> packet.handle(client.player, responseSender));
+        });
     }
 
     @Environment(EnvType.CLIENT)
-    public void handle(ClientPlayNetworking.Context context) {
+    public void handle(LocalPlayer localPlayer, PacketSender packetSender) {
         if (this.refreshAll()) {
             DataSyncAPI.refreshAllPlayerData(this.targetId());
             return;
         }
+
 
         DataType<?> type = DataRegistry.getById(this.dataTypeId());
         if (type == null) {
@@ -57,7 +61,7 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
         DataStore.getPlayerLookup(this.targetId, type).reload();
     }
 
-    private static S2CUpdatePlayerDataPacket fromNetwork(RegistryFriendlyByteBuf friendlyByteBuf) {
+    private static S2CUpdatePlayerDataPacket fromNetwork(FriendlyByteBuf friendlyByteBuf) {
 
         UUID targetId = friendlyByteBuf.readUUID();
 
@@ -70,7 +74,7 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
         return new S2CUpdatePlayerDataPacket(targetId, dataType);
     }
 
-    public void write(RegistryFriendlyByteBuf buf) {
+    public void write(FriendlyByteBuf buf) {
         buf.writeUUID(this.targetId());
 
         if (this.dataTypeId() != null) {
@@ -79,10 +83,5 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
         } else {
             buf.writeBoolean(false);
         }
-    }
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
     }
 }

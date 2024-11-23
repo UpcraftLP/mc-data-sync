@@ -56,7 +56,7 @@ public class SessionStore {
         }
 
         var mcSession = Minecraft.getInstance().getUser();
-        var profile = mcSession.getGameProfile();
+        var profile = Minecraft.getInstance().getGameProfile();
         var profileId = profile.getId().toString();
         var challengeReqData = new JsonObject();
         challengeReqData.addProperty("id", profileId);
@@ -71,7 +71,7 @@ public class SessionStore {
 
         var challenge = opt.get().getFirst();
         try {
-            Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getAccessToken(), challenge);
+            Minecraft.getInstance().getMinecraftSessionService().joinServer(profile.getId(), mcSession.getAccessToken(), challenge);
         } catch (AuthenticationException e) {
             DataSyncMod.LOGGER.error("Unable to authenticate", e);
             cooldownUntil = Instant.now().plus(30, ChronoUnit.SECONDS);
@@ -80,7 +80,7 @@ public class SessionStore {
 
         var authSuccessData = new JsonObject();
         authSuccessData.addProperty("id", profileId);
-        authSuccessData.addProperty("username", mcSession.getGameProfile().getName());
+        authSuccessData.addProperty("username", profile.getName());
         authSuccessData.addProperty("token", challenge);
         var authSuccessUri = URI.create("%s/auth/mojang".formatted(DataSyncMod.API_URL));
         response = HttpUtil.postJson(authSuccessUri, authSuccessData);

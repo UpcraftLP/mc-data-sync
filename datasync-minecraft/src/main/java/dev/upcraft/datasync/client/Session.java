@@ -9,6 +9,6 @@ import java.util.UUID;
 public record Session(UUID userId, String accessToken, Instant expiresAt) {
 
     public boolean isValid() {
-        return Minecraft.getInstance().getUser().getGameProfile().getId().equals(userId()) && expiresAt().isAfter(Instant.now().plus(10, ChronoUnit.SECONDS));
+        return Minecraft.getInstance().getGameProfile().getId().equals(userId()) && expiresAt().isAfter(Instant.now().plus(10, ChronoUnit.SECONDS));
     }
 }

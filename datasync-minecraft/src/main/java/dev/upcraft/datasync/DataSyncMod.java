@@ -10,7 +10,6 @@ import dev.upcraft.datasync.util.EntitlementsImpl;
 import dev.upcraft.datasync.util.ModHelper;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,11 +36,19 @@ public class DataSyncMod implements ModInitializer {
     public static final boolean LOGIN_FORCE_REFRESH = Boolean.getBoolean("datasync.login_force_refresh");
 
     public static ResourceLocation dataId(String path) {
-        return new ResourceLocation("datasync", path);
+        //? <1.21 {
+        /*return new ResourceLocation("datasync", path);
+        *///?} else {
+        return ResourceLocation.fromNamespaceAndPath("datasync", path);
+        //?}
     }
 
     public static ResourceLocation id(String path) {
-        return new ResourceLocation(MOD_ID, path);
+        //? <1.21 {
+        /*return new ResourceLocation(MOD_ID, path);
+         *///?} else {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        //?}
     }
 
     @Override
@@ -52,7 +59,7 @@ public class DataSyncMod implements ModInitializer {
                 DataStore.refresh(profile.getId(), LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profile.getName(), profile.getId()));
             }
         });
-        ServerPlayNetworking.registerGlobalReceiver(C2SUpdatePlayerDataPacket.TYPE, C2SUpdatePlayerDataPacket::handle);
+        C2SUpdatePlayerDataPacket.register();
     }
 
     private static boolean checkInternetAccess() {

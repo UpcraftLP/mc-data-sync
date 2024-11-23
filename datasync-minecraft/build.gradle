@@ -5,7 +5,13 @@ plugins {
 
 def ENV = System.getenv()
 
-def javaVersion = 17
+//@formatter:off
+def javaVersion =
+        stonecutter.eval(stonecutter.current.version, ">=1.20.5") ? 21 :
+        stonecutter.eval(stonecutter.current.version, ">=1.18") ?   17 :
+        stonecutter.eval(stonecutter.current.version, ">=1.17") ?   16 :
+                                                                     8
+//@formatter:on
 
 group = maven_group_id
 
@@ -14,7 +20,7 @@ def buildTime = ENV.BUILD_TIME ?: NOW.format('yyyyMMddHHmmss')
 
 boolean isPreviewBuild = !ENV.TAG || ENV.TAG.matches(".+-.+")
 def buildNumber = !ENV.TAG ? ("${ENV.BUILD_NUMBER ? "build.${ENV.BUILD_NUMBER}" : buildTime}") : ""
-version = (ENV.TAG ?: "${minecraft_version}-development") + ((isPreviewBuild && !ENV.TAG) ? "+${buildNumber}" : "")
+version = (ENV.TAG ?: "${stonecutter.current.project}-development") + ((isPreviewBuild && !ENV.TAG) ? "+${buildNumber}" : "")
 
 base {
     archivesName.set("datasync-minecraft")
@@ -105,7 +111,7 @@ repositories {
 
 dependencies {
     // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    minecraft "com.mojang:minecraft:${stonecutter.current.version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
@@ -120,20 +126,18 @@ dependencies {
 processResources {
     filteringCharset "UTF-8"
 
-    def expandProps = [
-            "version"              : version,
-            "mod_id"               : mod_id,
-            "mod_display_name"     : mod_display_name,
-            "mod_description"      : mod_description,
-            "sources_url"          : sources_url,
-            "issues_url"           : issues_url,
-            "discord_url"          : discord_url,
-            "homepage_url"         : homepage_url,
-            "minecraft_version"    : minecraft_version,
-            "java_version"         : "${javaVersion}",
+    def expandProps = ["version"              : version,
+                       "mod_id"               : mod_id,
+                       "mod_display_name"     : mod_display_name,
+                       "mod_description"      : mod_description,
+                       "sources_url"          : sources_url,
+                       "issues_url"           : issues_url,
+                       "discord_url"          : discord_url,
+                       "homepage_url"         : homepage_url,
+                       "minecraft_version"    : stonecutter.current.version,
+                       "java_version"         : "${javaVersion}",
 
-            "fabric_loader_version": loader_version,
-    ]
+                       "fabric_loader_version": loader_version,]
 
     filesMatching("fabric.mod.json") {
         expand expandProps
@@ -144,20 +148,18 @@ processResources {
 processTestmodResources {
     filteringCharset "UTF-8"
 
-    def expandProps = [
-            "version"              : version,
-            "mod_id"               : mod_id,
-            "mod_display_name"     : mod_display_name,
-            "mod_description"      : mod_description,
-            "sources_url"          : sources_url,
-            "issues_url"           : issues_url,
-            "discord_url"          : discord_url,
-            "homepage_url"         : homepage_url,
-            "minecraft_version"    : minecraft_version,
-            "java_version"         : "${javaVersion}",
+    def expandProps = ["version"              : version,
+                       "mod_id"               : mod_id,
+                       "mod_display_name"     : mod_display_name,
+                       "mod_description"      : mod_description,
+                       "sources_url"          : sources_url,
+                       "issues_url"           : issues_url,
+                       "discord_url"          : discord_url,
+                       "homepage_url"         : homepage_url,
+                       "minecraft_version"    : stonecutter.current.version,
+                       "java_version"         : "${javaVersion}",
 
-            "fabric_loader_version": loader_version,
-    ]
+                       "fabric_loader_version": loader_version,]
 
     filesMatching("fabric.mod.json") {
         expand expandProps
@@ -197,17 +199,15 @@ jar {
     }
 
     manifest {
-        attributes([
-                'Specification-Title'     : rootProject.name,
-                'Specification-Version'   : project.version,
-                'Implementation-Title'    : "${rootProject.name}-${project.name}",
-                'Maven-Artifact'          : "${maven_group_id}:datasync-minecraft-${project.minecraft_version}-fabric:${project.version}",
-                'Implementation-Version'  : project.version,
-                'Implementation-Timestamp': NOW.format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'Timestamp'               : NOW.toInstant().toEpochMilli(),
-                'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
-                'Built-On-Minecraft'      : minecraft_version
-        ])
+        attributes(['Specification-Title'     : rootProject.name,
+                    'Specification-Version'   : project.version,
+                    'Implementation-Title'    : "${rootProject.name}-${project.name}",
+                    'Maven-Artifact'          : "${maven_group_id}:datasync-minecraft-${stonecutter.current.project}:${project.version}",
+                    'Implementation-Version'  : project.version,
+                    'Implementation-Timestamp': NOW.format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                    'Timestamp'               : NOW.toInstant().toEpochMilli(),
+                    'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                    'Built-On-Minecraft'      : stonecutter.current.version])
     }
 }
 
@@ -220,7 +220,7 @@ sourcesJar {
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
-            artifactId = "datasync-minecraft-${project.minecraft_version}-fabric"
+            artifactId = "datasync-minecraft-${stonecutter.current.project}"
             from components.java
         }
     }

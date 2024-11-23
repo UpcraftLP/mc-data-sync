@@ -23,7 +23,7 @@ def buildNumber = !ENV.TAG ? ("${ENV.BUILD_NUMBER ? "build.${ENV.BUILD_NUMBER}" 
 version = (ENV.TAG ?: "${stonecutter.current.project}-development") + ((isPreviewBuild && !ENV.TAG) ? "+${buildNumber}" : "")
 
 base {
-    archivesName.set("datasync-minecraft")
+    archivesName.set("datasync-minecraft-${stonecutter.current.project}")
 }
 
 sourceSets {

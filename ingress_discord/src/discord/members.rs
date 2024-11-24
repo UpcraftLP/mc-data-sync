@@ -6,8 +6,10 @@ use crate::util::http::{
 use crate::util::identifier::Identifier;
 use crate::util::{db, http};
 use actix_web::web;
+use anyhow::Context;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use r2d2::Pool;
 use std::collections::HashMap;
@@ -172,7 +174,7 @@ pub async fn update_single_user(
     for (guild_id, active_mappings) in by_guild {
         // if we already have the roles, no need to query again
         if guild_id == guild {
-            desired_state.extend(get_desired_state(roles, &active_mappings));
+            desired_state.append(&mut get_desired_state(roles, &active_mappings));
             continue;
         }
 
@@ -180,14 +182,26 @@ pub async fn update_single_user(
         // this will return an error if the user is not in the guild, so we ignore that
         if let Ok(result) = CLIENT.guild_member(guild_id, user_snowflake).await {
             let member = result.model().await?;
-            desired_state.extend(get_desired_state(&member.roles, &active_mappings));
+            desired_state.append(&mut get_desired_state(&member.roles, &active_mappings));
         }
     }
 
     let data = AddUserEntitlementsInput {
         uuid: mc_user.minecraft_uuid.clone(),
-        entitlements: desired_state.iter().map(|id| id.to_string()).collect(),
+        entitlements: desired_state
+            .iter()
+            .unique()
+            .map(|id| id.to_string())
+            .collect(),
     };
+
+    if data.entitlements.is_empty() {
+        info!(
+            "No entitlements to update for user {}",
+            mc_user.minecraft_uuid
+        );
+        return Ok(());
+    }
 
     let client = http::client();
     client
@@ -197,8 +211,20 @@ pub async fn update_single_user(
         ))
         .json(&data)
         .send()
-        .await?
-        .error_for_status()?;
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to send request to {} for user {}",
+                *API_URL, mc_user.minecraft_uuid
+            )
+        })?
+        .error_for_status()
+        .with_context(|| {
+            format!(
+                "Failed to send request to {} for user {}",
+                *API_URL, mc_user.minecraft_uuid
+            )
+        })?;
 
     Ok(())
 }

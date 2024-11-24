@@ -20,21 +20,22 @@ pub async fn start(
 
     let app_data = web::Data::new(Mutex::new(data.clone()));
     HttpServer::new(move || {
-        App::new()
-            .app_data(app_data.clone())
-            .route("/api/discord/interactions",
-                   web::post().to(|data: web::Data<Mutex<ServerData>>, req: HttpRequest, body: String| async move {
-                       let mut handler: InteractionHandler;
-                       {
-                           let data = data.lock().unwrap();
-                           handler = data.handler.clone();
-                       }
-                       handler.interaction(req, body).await
-                   }),
-            )
+        App::new().app_data(app_data.clone()).route(
+            "/api/discord/interactions",
+            web::post().to(
+                |data: web::Data<Mutex<ServerData>>, req: HttpRequest, body: String| async move {
+                    let mut handler: InteractionHandler;
+                    {
+                        let data = data.lock().unwrap();
+                        handler = data.handler.clone();
+                    }
+                    handler.interaction(req, body).await
+                },
+            ),
+        )
     })
-        .bind(format!("0.0.0.0:{}", port))?
-        .run()
-        .await
-        .map_err(Into::into)
+    .bind(format!("0.0.0.0:{}", port))?
+    .run()
+    .await
+    .map_err(Into::into)
 }

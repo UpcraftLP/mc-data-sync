@@ -5,45 +5,46 @@ on:
     tags: ["*"]
 
 jobs:
-  publish:
+  init:
     runs-on: ubuntu-latest
+    outputs:
+      BUILD_TIME: ${{ steps.setup.outputs.BUILD_TIME }}
+    steps:
+      - name: Setup Environment
+        id: setup
+        run: |
+          echo BUILD_TIME=$(date '+%y.%m%d.%H%M') >> $GITHUB_OUTPUT
+
+  publish:
+    needs:
+      - init
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      BUILD_TIME: ${{ needs.init.outputs.BUILD_TIME }}
+      BUILD_NUMBER: ${{ github.run_number }}
+      MAVEN_UPLOAD_URL: ${{ secrets.MAVEN_UPLOAD_URL }}
+      MAVEN_UPLOAD_USERNAME: ${{ secrets.MAVEN_UPLOAD_USERNAME }}
+      MAVEN_UPLOAD_PASSWORD: ${{ secrets.MAVEN_UPLOAD_PASSWORD }}
+      JAVA_VERSION: 21
     steps:
       - uses: actions/checkout@v4
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
-      - name: Set up JDK 21
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
           distribution: "microsoft"
-          java-version: 21
-      - name: Get current time
-        uses: srfrnk/current-time@master
-        id: current-time
-        with:
-          format: YYYYMMDDHHmmss
-      - name: Setup ENV
-        run: echo "TAG=${{ github.ref_name }}" >> $GITHUB_ENV
-      - name: Copy Maven Upload URL
-        id: extract_maven_upload_url
-        run: echo "maven_upload_url=${{secrets.MAVEN_UPLOAD_URL}}" >> $GITHUB_OUTPUT
+          java-version: ${{ env.JAVA_VERSION }}
       - name: Grant execute permission for gradlew
         working-directory: datasync-minecraft
         run: chmod +x ./gradlew
       - name: Build with Gradle
         working-directory: datasync-minecraft
-        env:
-          BUILD_TIME: ${{ steps.current-time.outputs.formattedTime }}
-          BUILD_NUMBER: ${{ github.run_number }}
         run: ./gradlew chiseledAssemble --rerun-tasks
       - name: Maven Release
-        if: steps.extract_maven_upload_url.outputs.maven_upload_url
+        if: ${{ env.MAVEN_UPLOAD_URL }}
         working-directory: datasync-minecraft
-        env:
-          BUILD_TIME: ${{ steps.current-time.outputs.formattedTime }}
-          BUILD_NUMBER: ${{ github.run_number }}
-          MAVEN_UPLOAD_URL: ${{ secrets.MAVEN_UPLOAD_URL }}
-          MAVEN_UPLOAD_USERNAME: ${{ secrets.MAVEN_UPLOAD_USERNAME }}
-          MAVEN_UPLOAD_PASSWORD: ${{ secrets.MAVEN_UPLOAD_PASSWORD }}
         run: ./gradlew chiseledPublish
       - name: Publish (GitHub Releases)
         id: publish_github

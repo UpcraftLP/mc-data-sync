@@ -7,7 +7,9 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 
 import java.util.Optional;
@@ -23,7 +25,7 @@ public class Testmod implements ModInitializer {
             var stack = player.getItemInHand(hand);
 
             // when right clicking with a Netherite Axe, show a message to the player
-            if (stack.is(Items.NETHERITE_AXE)) {
+            if (stack.is(Items.NETHERITE_AXE) && !world.isClientSide()) {
                 if (!world.isClientSide()) {
 
                     SUPPORTER_DATA_SYNC_TOKEN.fetch(player.getUUID());
@@ -37,13 +39,22 @@ public class Testmod implements ModInitializer {
 
                     optional.ifPresentOrElse(data -> {
                         var messageComponent = Component.literal(data.message()).withStyle(s -> s.withColor(data.color()));
-                        player.sendSystemMessage(Component.literal("Your message is: ").append(messageComponent));
-                    }, () -> player.sendSystemMessage(Component.literal("You do not have any data stored!")));
+                        sendMessage((ServerPlayer) player, Component.literal("Your message is: ").append(messageComponent));
+                    }, () -> sendMessage((ServerPlayer) player, Component.literal("You do not have any data stored!")));
                 }
-                return InteractionResultHolder.sidedSuccess(stack, world.isClientSide());
+
+                //? <1.21.4 {
+                return net.minecraft.world.InteractionResultHolder.success(stack);
+                //?} else {
+                /*return InteractionResult.SUCCESS;
+                *///?}
             }
 
-            return InteractionResultHolder.pass(stack);
+            //? <1.21.4 {
+            return net.minecraft.world.InteractionResultHolder.pass(stack);
+            //?} else {
+            /*return net.minecraft.world.InteractionResult.PASS;
+             *///?}
         });
     }
 
@@ -53,5 +64,9 @@ public class Testmod implements ModInitializer {
          *///?} else {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
         //?}
+    }
+
+    private static void sendMessage(ServerPlayer player, Component message) {
+        player.sendSystemMessage(message);
     }
 }

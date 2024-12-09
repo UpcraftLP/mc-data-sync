@@ -3,7 +3,6 @@ package dev.upcraft.datasync.testmod;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.item.Items;
 
 public class TestmodClient implements ClientModInitializer {
@@ -18,7 +17,8 @@ public class TestmodClient implements ClientModInitializer {
                 if (world.isClientSide()) {
                     var random = player.getRandom();
                     String message = String.format("You have %d points!", random.nextInt(20000) + 300);
-                    int color = Mth.color(random.nextFloat(), random.nextFloat(), random.nextFloat());
+
+                    int color = Mth.hsvToRgb(random.nextFloat(), random.nextFloat(), 0.5F + random.nextFloat() * 0.5F);
 
                     SupporterData newData = new SupporterData(message, color);
 
@@ -26,9 +26,18 @@ public class TestmodClient implements ClientModInitializer {
                     // (this returns a future so you can react to when the sending is finished)
                     Testmod.SUPPORTER_DATA_SYNC_TOKEN.setData(newData);
                 }
-                return InteractionResultHolder.success(stack);
+
+                //? <1.21.4 {
+                return net.minecraft.world.InteractionResultHolder.success(stack);
+                //?} else {
+                /*return net.minecraft.world.InteractionResult.SUCCESS;
+                *///?}
             }
-            return InteractionResultHolder.pass(stack);
+            //? <1.21.4 {
+            return net.minecraft.world.InteractionResultHolder.pass(stack);
+            //?} else {
+            /*return net.minecraft.world.InteractionResult.PASS;
+            *///?}
         });
     }
 }

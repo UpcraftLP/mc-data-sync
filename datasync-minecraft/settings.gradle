@@ -8,14 +8,14 @@ pluginManagement {
 		}
 		maven {
 			name = "StoneCutterSnapshots"
-			url = 'https://maven.kikugie.dev/snapshots'
+			url = 'https://maven.kikugie.dev/releases'
 		}
 	}
 }
 
 plugins {
 	id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
-	id 'dev.kikugie.stonecutter' version '0.5-beta.5'
+	id 'dev.kikugie.stonecutter' version '0.5'
 }
 
 rootProject.name = 'DataSync'

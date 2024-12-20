@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.Lifecycle;
+import com.sun.jna.Platform;
 import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.util.ModHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -36,18 +37,28 @@ public class HttpUtil {
         return t;
     });
     private static final Supplier<HttpClient> httpClient = Suppliers.memoize(() -> HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).executor(BACKGROUND_EXECUTOR).build());
+    private static final Supplier<String> USER_AGENT = Suppliers.memoize(() -> {
+        var meta = ModHelper.getMeta(DataSyncMod.MOD_ID);
+        var gameMeta = ModHelper.getGameMeta();
+        var loader = buildLoaderUAString();
+        String system;
+        try {
+            system = buildSystemUAString();
+        } catch (Exception e) {
+            DataSyncMod.LOGGER.error("Error during gathering system info", e);
+
+            system = String.format("%s;%s", System.getProperty("os.name").replace(' ', '_'), Platform.ARCH);
+        }
+
+        return String.format("%s/%s (%s) %s/%s (%s)", meta.getName(), meta.getVersion(), loader, gameMeta.getName(), gameMeta.getVersion(), system);
+    });
 
     public static HttpClient getClient() {
         return httpClient.get();
     }
 
     public static String getUserAgentString() {
-        var meta = ModHelper.getMeta(DataSyncMod.MOD_ID);
-        var gameMeta = ModHelper.getGameMeta();
-        var loader = buildLoaderUAString();
-        var system = buildSystemUAString();
-
-        return String.format("%s/%s (%s) %s/%s (%s)", meta.getName(), meta.getVersion(), loader, gameMeta.getName(), gameMeta.getVersion(), system);
+        return USER_AGENT.get();
     }
 
     public static String buildLoaderUAString() {
@@ -71,13 +82,7 @@ public class HttpUtil {
         var osFamily = os.getFamily();
         var osVersion = os.getVersionInfo().getVersion();
 
-        var bitness = switch (os.getBitness()) {
-            case 32 -> "x86";
-            case 64 -> "x64";
-            default -> throw new IllegalStateException("Unsupported operating system bitness: " + os.getBitness());
-        };
-
-        return String.format("%s %s; %s", osFamily, osVersion, bitness);
+        return String.format("%s_%s; %s", osFamily, osVersion, Platform.ARCH);
     }
 
     public static HttpRequest.Builder acceptsJson(HttpRequest.Builder builder) {

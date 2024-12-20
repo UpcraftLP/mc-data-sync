@@ -36,14 +36,7 @@ public class StoredDataHolder<T> {
         if (this.loaderFuture != null) {
             this.loaderFuture.cancel(true);
         }
-        this.loaderFuture = CompletableFuture.supplyAsync(() -> {
-            try {
-                return type.fetchRemote(playerId);
-            } catch (Exception e) {
-                // unwrap ExecutionException to get the underlying error
-                throw new RuntimeException(e.getCause());
-            }
-        }).exceptionally(t -> {
+        this.loaderFuture = CompletableFuture.supplyAsync(() -> type.fetchRemote(playerId)).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to fetch data for {}[{}]", type.id(), playerId, t);
             return previous;
         }).thenApplyAsync(this::onLoadComplete);

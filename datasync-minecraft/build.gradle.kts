@@ -1,12 +1,20 @@
-import java.util.Date
 import java.text.SimpleDateFormat
+import java.util.*
 
 plugins {
     id("fabric-loom") version "1.10-SNAPSHOT"
     id("maven-publish")
 }
 
-val ENV = System.getenv()
+object Loaders {
+    const val FABRIC = "fabric"
+    const val NEOFORGE = "neoforge"
+}
+
+// TODO neoforge support?
+val loader = Loaders.FABRIC
+
+val env: Map<String, String> = System.getenv()
 
 //@formatter:off
 val javaVersion =
@@ -25,25 +33,26 @@ class ModData {
     val issuesUrl = property("issues_url").toString()
     val discordUrl = property("discord_url").toString()
     val homepageUrl = property("homepage_url").toString()
+
+    val minecraftVersionRange = property("minecraft_version_range").toString()
 }
+
 val mod = ModData()
 
 group = mod.group
 
 val NOW = Date()
-val buildTime = ENV["BUILD_TIME"] ?: SimpleDateFormat("yyyyMMddHHmmss").format(NOW)
+val buildTime = env["BUILD_TIME"] ?: SimpleDateFormat("yyyyMMddHHmmss").format(NOW)
 
-val isPreviewBuild = ENV["TAG"]?.matches(".+-.+".toRegex()) ?: true
-val buildNumber = ENV["TAG"] ?: ENV["BUILD_NUMBER"]?.let { "build.$it" } ?: buildTime
+val isPreviewBuild = env["TAG"]?.matches(".+-.+".toRegex()) ?: true
+val buildNumber = env["TAG"] ?: env["BUILD_NUMBER"]?.let { "build.$it" } ?: buildTime
 version = buildString {
-    append(ENV["TAG"] ?: "${stonecutter.current.project}-development")
-    if (ENV["TAG"] == null && isPreviewBuild) append("+$buildNumber")
+    append(env["TAG"] ?: "${stonecutter.current.project}-development")
+    if (env["TAG"] == null && isPreviewBuild) append("+$buildNumber")
 }
 base {
     archivesName.set("datasync-minecraft-${stonecutter.current.project}")
 }
-
-
 
 sourceSets {
     create("testmod") {
@@ -54,88 +63,93 @@ sourceSets {
     }
 }
 
-loom {
-    runConfigs {
-        configureEach {
-            runDir("run")
-            ideConfigGenerated(true)
-            if (project.hasProperty("mc_java_agent_path")) {
-                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
+if (loader == Loaders.FABRIC) {
+    loom {
+        runConfigs {
+            configureEach {
+                runDir("run")
+                ideConfigGenerated(true)
+                if (project.hasProperty("mc_java_agent_path")) {
+                    vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
+                }
+
+                property("fabric.log.level", "info")
+                property("java.net.preferIPv4Stack", "true")
             }
 
-            property("fabric.log.level", "info")
-            property("java.net.preferIPv4Stack", "true")
-        }
+            "client" {
+                client()
+                configName = "Fabric Client"
 
-        "client" {
-            client()
-            setConfigName("Fabric Client")
+                if (project.hasProperty("mc_uuid")) {
+                    programArg("--uuid=${project.findProperty("mc_uuid")}")
+                }
 
-            if (project.hasProperty("mc_uuid")) {
-                programArg("--uuid=${project.findProperty("mc_uuid")}")
+                if (project.hasProperty("mc_username")) {
+                    programArg("--username=${project.findProperty("mc_username")}")
+                }
+
+                if (project.hasProperty("mc_java_agent_path")) {
+                    vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
+                }
             }
 
-            if (project.hasProperty("mc_username")) {
-                programArg("--username=${project.findProperty("mc_username")}")
+            "server" {
+                server()
+                configName = "Fabric Server"
             }
 
-            if (project.hasProperty("mc_java_agent_path")) {
-                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
-            }
-        }
+            create("testmodClient") {
+                client()
+                configName = "Fabric Testmod Client"
+                source(sourceSets["testmod"])
 
-        "server" {
-            server()
-            setConfigName("Fabric Server")
-        }
+                if (project.hasProperty("mc_uuid")) {
+                    programArg("--uuid=${project.findProperty("mc_uuid")}")
+                }
 
-        create("testmodClient") {
-            client()
-            setConfigName("Fabric Testmod Client")
-            source(sourceSets["testmod"])
-
-            if (project.hasProperty("mc_uuid")) {
-                programArg("--uuid=${project.findProperty("mc_uuid")}")
+                if (project.hasProperty("mc_username")) {
+                    programArg("--username=${project.findProperty("mc_username")}")
+                }
             }
 
-            if (project.hasProperty("mc_username")) {
-                programArg("--username=${project.findProperty("mc_username")}")
+            create("testmodServer") {
+                server()
+                configName = "Fabric Testmod Server"
+                source(sourceSets["testmod"])
             }
         }
 
-        create("testmodServer") {
-            server()
-            setConfigName("Fabric Testmod Server")
-            source(sourceSets["testmod"])
-        }
-    }
+        mods {
+            create("${mod.id}") {
+                sourceSet(sourceSets["main"])
+            }
 
-    mods {
-        create("${mod.id}") {
-            sourceSet(sourceSets["main"])
-        }
-
-        create("testmod") {
-            sourceSet(sourceSets["testmod"])
+            create("testmod") {
+                sourceSet(sourceSets["testmod"])
+            }
         }
     }
 }
 
 repositories {
-    maven("https://maven.terraformersmc.com/releases")
+    if (loader == Loaders.FABRIC) {
+        maven("https://maven.terraformersmc.com/releases")
+    }
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${stonecutter.current.version}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
+    if (loader == Loaders.FABRIC) {
+        // To change the versions see the gradle.properties file
+        minecraft("com.mojang:minecraft:${stonecutter.current.version}")
+        mappings(loom.officialMojangMappings())
+        modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
-
-    modLocalRuntime("com.terraformersmc:modmenu:${property("modmenu_version").toString()}") {
-        isTransitive = false
+        // Fabric API. This is technically optional, but you probably want it anyway.
+        modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
+        modLocalRuntime("com.terraformersmc:modmenu:${property("modmenu_version").toString()}") {
+            isTransitive = false
+        }
     }
 
     "testmodImplementation"(sourceSets["main"].output)
@@ -150,13 +164,14 @@ tasks.withType<ProcessResources> {
         "mod_display_name" to mod.displayName,
         "mod_description" to mod.description,
         "sources_url" to mod.sourcesUrl,
-       "issues_url" to mod.issuesUrl,
-       "discord_url" to mod.discordUrl,
-       "homepage_url" to mod.homepageUrl,
-       "minecraft_version" to stonecutter.current.version,
-       "java_version" to javaVersion,
+        "issues_url" to mod.issuesUrl,
+        "discord_url" to mod.discordUrl,
+        "homepage_url" to mod.homepageUrl,
+        "minecraft_version" to stonecutter.current.version,
+        "minecraft_version_range" to mod.minecraftVersionRange,
+        "java_version" to javaVersion,
 
-       "fabric_loader_version" to project.property("fabric_loader_version").toString()
+        "fabric_loader_version" to project.property("fabric_loader_version").toString()
     )
 
     filesMatching("fabric.mod.json") {
@@ -203,11 +218,13 @@ tasks.jar {
         attributes["Specification-Title"] = rootProject.name
         attributes["Specification-Version"] = project.version
         attributes["Implementation-Title"] = "${rootProject.name}-${project.name}"
-        attributes["Maven-Artifact"] = "${mod.group}:datasync-minecraft-${stonecutter.current.project}:${project.version}"
+        attributes["Maven-Artifact"] =
+            "${mod.group}:datasync-minecraft-${stonecutter.current.project}:${project.version}"
         attributes["Implementation-Version"] = project.version
         attributes["Implementation-Timestamp"] = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(NOW)
         attributes["Timestamp"] = NOW.toInstant().toEpochMilli()
-        attributes["Built-On-Java"] = "${System.getProperty("java.vm.version")} (${System.getProperty("java.vm.vendor")})"
+        attributes["Built-On-Java"] =
+            "${System.getProperty("java.vm.version")} (${System.getProperty("java.vm.vendor")})"
         attributes["Built-On-Minecraft"] = stonecutter.current.version
     }
 }
@@ -227,12 +244,12 @@ publishing {
     }
 
     repositories {
-        ENV["MAVEN_UPLOAD_URL"]?.let { uploadUrl ->
+        env["MAVEN_UPLOAD_URL"]?.let { uploadUrl ->
             maven {
                 url = uri(uploadUrl)
                 credentials {
-                    username = ENV["MAVEN_UPLOAD_USERNAME"]
-                    password = ENV["MAVEN_UPLOAD_PASSWORD"]
+                    username = env["MAVEN_UPLOAD_USERNAME"]
+                    password = env["MAVEN_UPLOAD_PASSWORD"]
                 }
             }
         }

@@ -1,11 +1,10 @@
 use crate::discord::members;
-use crate::util::{
-    db, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker,
-};
+use crate::util::{db, http, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker};
 use actix_web::web;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use r2d2::Pool;
+use reqwest::header;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
@@ -86,7 +85,8 @@ pub(crate) async fn link_command(
 
     let error: Option<String>;
 
-    match reqwest::get(&url).await {
+    let client = reqwest::Client::builder().user_agent(http::user_agent()).build()?;
+    match client.get(&url).await {
         Ok(response) => match response.json::<PlayerDbResponse>().await {
             Ok(db_response) => {
                 if !db_response.success {

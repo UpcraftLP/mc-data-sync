@@ -25,14 +25,7 @@ lazy_static! {
     static ref HTTP_CLIENT: reqwest::Client = reqwest::Client::builder()
         .user_agent(USER_AGENT.clone())
         .default_headers({
-            let api_key = env::var("DATASYNC_API_KEY").expect("DATASYNC_API_KEY not set");
-
             let mut headers = header::HeaderMap::new();
-            headers.insert(
-                header::USER_AGENT,
-                header::HeaderValue::try_from(USER_AGENT.clone())
-                    .expect("Failed to create User-Agent header"),
-            );
             headers.insert(
                 header::ACCEPT,
                 header::HeaderValue::from_static("application/json"),
@@ -41,6 +34,8 @@ lazy_static! {
                 header::CONTENT_TYPE,
                 header::HeaderValue::from_static("application/json"),
             );
+
+            let api_key = env::var("DATASYNC_API_KEY").expect("DATASYNC_API_KEY not set");
             headers.insert(
                 HeaderName::from_static("x-api-key"),
                 header::HeaderValue::try_from(api_key).expect("Failed to create X-Api-Key header"),
@@ -54,6 +49,10 @@ lazy_static! {
 
 pub fn client() -> reqwest::Client {
     HTTP_CLIENT.clone()
+}
+
+pub fn user_agent() -> &'static str {
+    USER_AGENT.as_str()
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

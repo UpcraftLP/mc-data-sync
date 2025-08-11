@@ -86,7 +86,7 @@ pub(crate) async fn link_command(
     let error: Option<String>;
 
     let client = reqwest::Client::builder().user_agent(http::user_agent()).build()?;
-    match client.get(&url).await {
+    match client.get(&url).send().await {
         Ok(response) => match response.json::<PlayerDbResponse>().await {
             Ok(db_response) => {
                 if !db_response.success {

@@ -7,6 +7,9 @@ on:
       - '.github/workflows/client.yml'
       - 'datasync-minecraft/**'
   pull_request:
+    paths:
+      - '.github/workflows/client.yml'
+      - 'datasync-minecraft/**'
 
 env:
   JAVA_VERSION: 21
@@ -15,9 +18,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'microsoft'

@@ -3,6 +3,9 @@ FROM node:${NODE_VERSION}-alpine AS base
 
 RUN ulimit -c unlimited
 
+# prisma needs OpenSSL
+RUN apk add --no-cache openssl
+
 FROM base AS build
 
 WORKDIR /app

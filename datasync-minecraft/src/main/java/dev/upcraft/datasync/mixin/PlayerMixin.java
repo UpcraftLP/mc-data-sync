@@ -27,10 +27,10 @@ public abstract class PlayerMixin extends LivingEntity implements DataSyncPlayer
     @Override
     public Entitlements datasync$getEntitlements() {
         //? >=1.21.9 {
-        var profileId = this.getGameProfile().id();
-        //?} else {
-        /*var profileId = this.getGameProfile().getId();
-         *///?}
+        /*var profileId = this.getGameProfile().id();
+        *///?} else {
+        var profileId = this.getGameProfile().getId();
+         //?}
         return Entitlements.token().getOrDefault(profileId, EntitlementsImpl.empty());
     }
 

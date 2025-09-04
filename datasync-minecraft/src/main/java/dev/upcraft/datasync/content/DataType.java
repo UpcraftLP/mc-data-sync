@@ -41,10 +41,10 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
 
         var profile = GameProfileHelper.getClientProfile();
         //? >=1.21.9 {
-        var playerId = profile.id();
-        //?} else {
-        /*var playerId = profile.getId();
-        *///?}
+        /*var playerId = profile.id();
+        *///?} else {
+        var playerId = profile.getId();
+        //?}
 
         // manually store data so the client gets an immediate update
         var lookup = DataStore.getPlayerLookupEmpty(playerId, this);

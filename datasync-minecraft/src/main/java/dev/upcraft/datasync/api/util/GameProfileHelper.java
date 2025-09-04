@@ -16,12 +16,12 @@ public class GameProfileHelper {
         *///?}
 
         //? >=1.21.9 {
-        var name = profile.name();
+        /*var name = profile.name();
         var expectedId = profile.id();
-        //?} else {
-        /*var name = profile.getName();
+        *///?} else {
+        var name = profile.getName();
         var expectedId = profile.getId();
-        *///?}
+        //?}
 
         return UUIDUtil.createOfflinePlayerUUID(name).equals(expectedId);
     }

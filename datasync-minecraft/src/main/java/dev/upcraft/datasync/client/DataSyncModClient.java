@@ -29,10 +29,10 @@ public class DataSyncModClient implements ClientModInitializer {
         }
 
         //? >=1.21.9 {
-        var id = profile.id();
-        //?} else {
-        /*var id = profile.getId();
-        *///?}
+        /*var id = profile.id();
+        *///?} else {
+        var id = profile.getId();
+        //?}
 
         DataStore.refresh(id, DataSyncMod.LOGIN_FORCE_REFRESH).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to preload player data", t);

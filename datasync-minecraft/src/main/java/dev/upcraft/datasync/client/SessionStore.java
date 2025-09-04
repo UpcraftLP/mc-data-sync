@@ -59,12 +59,12 @@ public class SessionStore {
 
         var profile = GameProfileHelper.getClientProfile();
         //? >=1.21.9 {
-        var profileId = profile.id();
+        /*var profileId = profile.id();
         var profileName = profile.name();
-        //?} else {
-        /*var profileId = profile.getId();
+        *///?} else {
+        var profileId = profile.getId();
         var profileName = profile.getName();
-        *///?}
+        //?}
         var challengeReqData = new JsonObject();
         challengeReqData.addProperty("id", profileId.toString());
         var challengeUri = URI.create("%s/auth/mojang/challenge".formatted(DataSyncMod.API_URL));
@@ -79,10 +79,10 @@ public class SessionStore {
         var challenge = opt.get().getFirst();
         try {
             //? >=1.21.9 {
-            Minecraft.getInstance().services().sessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
-            //?} elif >=1.21 {
-            /*Minecraft.getInstance().getMinecraftSessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
-            *///?} else {
+            /*Minecraft.getInstance().services().sessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
+            *///?} elif >=1.21 {
+            Minecraft.getInstance().getMinecraftSessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
+            //?} else {
             /*Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getAccessToken(), challenge);
             *///?}
         } catch (AuthenticationException e) {

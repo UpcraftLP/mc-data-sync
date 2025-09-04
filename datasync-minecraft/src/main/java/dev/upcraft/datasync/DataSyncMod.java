@@ -57,12 +57,12 @@ public class DataSyncMod implements ModInitializer {
             if (LOGIN_AUTOFETCH) {
                 GameProfile profile = handler.getPlayer().getGameProfile();
                 //? >=1.21.9 {
-                var profileId = profile.id();
+                /*var profileId = profile.id();
                 var profileName = profile.name();
-                //?} else {
-                /*var profileId = profile.getId();
+                *///?} else {
+                var profileId = profile.getId();
                 var profileName = profile.getName();
-                *///?}
+                //?}
                 DataStore.refresh(profileId, LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profileName, profileId));
             }
         });

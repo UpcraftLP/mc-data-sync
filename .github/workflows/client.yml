@@ -50,3 +50,9 @@ jobs:
         with:
           name: ${{ github.event.repository.name }}-1.21.1-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.21.1-fabric/build/libs/*.jar
+      - name: Upload artifacts (Fabric 1.21.9)
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ github.event.repository.name }}-1.21.9-Fabric-${{ github.sha }}
+          path: datasync-minecraft/versions/1.21.9-fabric/build/libs/*.jar

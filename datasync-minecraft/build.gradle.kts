@@ -16,13 +16,12 @@ val loader = Loaders.FABRIC
 
 val env: Map<String, String> = System.getenv()
 
-//@formatter:off
-val javaVersion =
-    if (stonecutter.eval(stonecutter.current.version, ">=1.20.5")) 21
-    else if (stonecutter.eval(stonecutter.current.version, ">=1.18")) 17
-    else if (stonecutter.eval(stonecutter.current.version, ">=1.17")) 16
-    else 8
-//@formatter:on
+val javaVersion = when {
+    stonecutter.eval(stonecutter.current.version, ">=1.20.5") -> 21
+    stonecutter.eval(stonecutter.current.version, ">=1.18") -> 17
+    stonecutter.eval(stonecutter.current.version, ">=1.17") -> 16
+    else -> 8
+}
 
 class ModData {
     val id = property("mod_id").toString()

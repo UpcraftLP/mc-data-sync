@@ -43,11 +43,11 @@ jobs:
         run: chmod +x ./gradlew
       - name: Build with Gradle
         working-directory: datasync-minecraft
-        run: ./gradlew chiseledAssemble --rerun-tasks
+        run: ./gradlew assemble --rerun-tasks
       - name: Maven Release
         if: ${{ env.MAVEN_UPLOAD_URL }}
         working-directory: datasync-minecraft
-        run: ./gradlew chiseledPublish
+        run: ./gradlew publish
       - name: Publish (GitHub Releases)
         id: publish_github
         uses: Kir-Antipov/mc-publish@995edadc13559a8b28d0b7e6571229f067ec7659

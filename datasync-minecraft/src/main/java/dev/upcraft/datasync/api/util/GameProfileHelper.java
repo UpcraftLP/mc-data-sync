@@ -14,7 +14,16 @@ public class GameProfileHelper {
             return true;
         }
         *///?}
-        return UUIDUtil.createOfflinePlayerUUID(profile.getName()).equals(profile.getId());
+
+        //? >=1.21.9 {
+        var name = profile.name();
+        var expectedId = profile.id();
+        //?} else {
+        /*var name = profile.getName();
+        var expectedId = profile.getId();
+        *///?}
+
+        return UUIDUtil.createOfflinePlayerUUID(name).equals(expectedId);
     }
 
     @Environment(EnvType.CLIENT)

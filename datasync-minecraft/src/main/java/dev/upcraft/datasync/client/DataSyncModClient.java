@@ -28,18 +28,24 @@ public class DataSyncModClient implements ClientModInitializer {
             return;
         }
 
-        DataStore.refresh(profile.getId(), DataSyncMod.LOGIN_FORCE_REFRESH).exceptionally(t -> {
+        //? >=1.21.9 {
+        var id = profile.id();
+        //?} else {
+        /*var id = profile.getId();
+        *///?}
+
+        DataStore.refresh(id, DataSyncMod.LOGIN_FORCE_REFRESH).exceptionally(t -> {
             DataSyncMod.LOGGER.error("Unable to preload player data", t);
             return null;
         });
     }
 
     public static GameProfile getCurrentPlayerProfile() {
-        //? <1.21 {
-        /*return Minecraft.getInstance().getUser().getGameProfile();
-        *///?} else {
+        //? >=1.21 {
         return Minecraft.getInstance().getGameProfile();
-        //?}
+        //?} else {
+        /*return Minecraft.getInstance().getUser().getGameProfile();
+        *///?}
     }
 
     @Override

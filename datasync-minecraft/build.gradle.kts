@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("fabric-loom") version "1.10-SNAPSHOT"
+    id("fabric-loom") version "1.11-SNAPSHOT"
     id("maven-publish")
 }
 
@@ -34,6 +34,7 @@ class ModData {
     val discordUrl = property("discord_url").toString()
     val homepageUrl = property("homepage_url").toString()
 
+    val minecraftVersion = property("minecraft_version").toString()
     val minecraftVersionRange = property("minecraft_version_range").toString()
 }
 
@@ -41,8 +42,8 @@ val mod = ModData()
 
 group = mod.group
 
-val NOW = Date()
-val buildTime = env["BUILD_TIME"] ?: SimpleDateFormat("yyyyMMddHHmmss").format(NOW)
+val now = Date()
+val buildTime: String = env["BUILD_TIME"] ?: SimpleDateFormat("yyyyMMddHHmmss").format(now)
 
 val isPreviewBuild = env["TAG"]?.matches(".+-.+".toRegex()) ?: true
 val buildNumber = env["TAG"] ?: env["BUILD_NUMBER"]?.let { "build.$it" } ?: buildTime
@@ -54,12 +55,14 @@ base {
     archivesName.set("datasync-minecraft-${stonecutter.current.project}")
 }
 
-sourceSets {
-    create("testmod") {
-        java {
-            compileClasspath += sourceSets["main"].compileClasspath
-            runtimeClasspath += sourceSets["main"].runtimeClasspath
-        }
+stonecutter {
+    dependencies["java"] = javaVersion.toString()
+}
+
+sourceSets.create("testmod") {
+    java {
+        compileClasspath += sourceSets["main"].compileClasspath
+        runtimeClasspath += sourceSets["main"].runtimeClasspath
     }
 }
 
@@ -141,14 +144,15 @@ repositories {
 dependencies {
     if (loader == Loaders.FABRIC) {
         // To change the versions see the gradle.properties file
-        minecraft("com.mojang:minecraft:${stonecutter.current.version}")
+        minecraft("com.mojang:minecraft:${mod.minecraftVersion}")
         mappings(loom.officialMojangMappings())
         modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
 
         // Fabric API. This is technically optional, but you probably want it anyway.
         modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
-        modLocalRuntime("com.terraformersmc:modmenu:${property("modmenu_version").toString()}") {
-            isTransitive = false
+
+        findProperty("modmenu_version")?.let {
+            modLocalRuntime("com.terraformersmc:modmenu:${it}")
         }
     }
 
@@ -167,7 +171,7 @@ tasks.withType<ProcessResources> {
         "issues_url" to mod.issuesUrl,
         "discord_url" to mod.discordUrl,
         "homepage_url" to mod.homepageUrl,
-        "minecraft_version" to stonecutter.current.version,
+        "minecraft_version" to mod.minecraftVersion,
         "minecraft_version_range" to mod.minecraftVersionRange,
         "java_version" to javaVersion,
 
@@ -190,10 +194,8 @@ java {
     withJavadocJar()
 
     toolchain {
-        if (JavaVersion.current() < JavaVersion.toVersion(javaVersion)) {
-            languageVersion = JavaLanguageVersion.of(javaVersion)
-            vendor = JvmVendorSpec.MICROSOFT
-        }
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+        vendor = JvmVendorSpec.MICROSOFT
     }
 }
 
@@ -221,11 +223,11 @@ tasks.jar {
         attributes["Maven-Artifact"] =
             "${mod.group}:datasync-minecraft-${stonecutter.current.project}:${project.version}"
         attributes["Implementation-Version"] = project.version
-        attributes["Implementation-Timestamp"] = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(NOW)
-        attributes["Timestamp"] = NOW.toInstant().toEpochMilli()
+        attributes["Implementation-Timestamp"] = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(now)
+        attributes["Timestamp"] = now.toInstant().toEpochMilli()
         attributes["Built-On-Java"] =
             "${System.getProperty("java.vm.version")} (${System.getProperty("java.vm.vendor")})"
-        attributes["Built-On-Minecraft"] = stonecutter.current.version
+        attributes["Built-On-Minecraft"] = mod.minecraftVersion
     }
 }
 

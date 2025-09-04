@@ -58,9 +58,15 @@ public class SessionStore {
         var mcSession = Minecraft.getInstance().getUser();
 
         var profile = GameProfileHelper.getClientProfile();
-        var profileId = profile.getId().toString();
+        //? >=1.21.9 {
+        var profileId = profile.id();
+        var profileName = profile.name();
+        //?} else {
+        /*var profileId = profile.getId();
+        var profileName = profile.getName();
+        *///?}
         var challengeReqData = new JsonObject();
-        challengeReqData.addProperty("id", profileId);
+        challengeReqData.addProperty("id", profileId.toString());
         var challengeUri = URI.create("%s/auth/mojang/challenge".formatted(DataSyncMod.API_URL));
         var response = HttpUtil.postJson(challengeUri, challengeReqData);
 
@@ -72,9 +78,11 @@ public class SessionStore {
 
         var challenge = opt.get().getFirst();
         try {
-            //? >=1.21 {
-            Minecraft.getInstance().getMinecraftSessionService().joinServer(profile.getId(), mcSession.getAccessToken(), challenge);
-            //?} else {
+            //? >=1.21.9 {
+            Minecraft.getInstance().services().sessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
+            //?} elif >=1.21 {
+            /*Minecraft.getInstance().getMinecraftSessionService().joinServer(profileId, mcSession.getAccessToken(), challenge);
+            *///?} else {
             /*Minecraft.getInstance().getMinecraftSessionService().joinServer(profile, mcSession.getAccessToken(), challenge);
             *///?}
         } catch (AuthenticationException e) {
@@ -84,8 +92,8 @@ public class SessionStore {
         }
 
         var authSuccessData = new JsonObject();
-        authSuccessData.addProperty("id", profileId);
-        authSuccessData.addProperty("username", profile.getName());
+        authSuccessData.addProperty("id", profileId.toString());
+        authSuccessData.addProperty("username", profileName);
         authSuccessData.addProperty("token", challenge);
         var authSuccessUri = URI.create("%s/auth/mojang".formatted(DataSyncMod.API_URL));
         response = HttpUtil.postJson(authSuccessUri, authSuccessData);

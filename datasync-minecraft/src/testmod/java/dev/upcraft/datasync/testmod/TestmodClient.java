@@ -28,16 +28,16 @@ public class TestmodClient implements ClientModInitializer {
                 }
 
                 //? <1.21.4 {
-                return net.minecraft.world.InteractionResultHolder.success(stack);
-                //?} else {
-                /*return net.minecraft.world.InteractionResult.SUCCESS;
-                *///?}
+                /*return net.minecraft.world.InteractionResultHolder.success(stack);
+                *///?} else {
+                return net.minecraft.world.InteractionResult.SUCCESS;
+                //?}
             }
             //? <1.21.4 {
-            return net.minecraft.world.InteractionResultHolder.pass(stack);
-            //?} else {
-            /*return net.minecraft.world.InteractionResult.PASS;
-            *///?}
+            /*return net.minecraft.world.InteractionResultHolder.pass(stack);
+            *///?} else {
+            return net.minecraft.world.InteractionResult.PASS;
+            //?}
         });
     }
 }

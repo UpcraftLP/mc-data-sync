@@ -56,15 +56,26 @@ public class DataSyncMod implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             if (LOGIN_AUTOFETCH) {
                 GameProfile profile = handler.getPlayer().getGameProfile();
-                DataStore.refresh(profile.getId(), LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profile.getName(), profile.getId()));
+                //? >=1.21.9 {
+                var profileId = profile.id();
+                var profileName = profile.name();
+                //?} else {
+                /*var profileId = profile.getId();
+                var profileName = profile.getName();
+                *///?}
+                DataStore.refresh(profileId, LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profileName, profileId));
             }
         });
         C2SUpdatePlayerDataPacket.register();
     }
 
     private static boolean checkInternetAccess() {
-        try {
+        //? java: >=21 {
+        try (var client = HttpClient.newHttpClient()) {
+        //?} else {
+        /*try {
             var client = HttpClient.newHttpClient();
+         *///?}
             var request = HttpRequest.newBuilder().uri(URI.create("https://sessionserver.mojang.com")).build();
             client.send(request, HttpResponse.BodyHandlers.discarding());
             return true;

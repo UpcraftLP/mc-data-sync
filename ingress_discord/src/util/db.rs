@@ -42,7 +42,7 @@ pub fn add_user(connection: &mut SqliteConnection, snowflake_id: Snowflake) -> a
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .context("Failed to insert user")?;
+        .with_context(|| format!("add_user::Failed to insert user {snowflake_id}"))?;
 
     Ok(())
 }
@@ -56,7 +56,7 @@ pub fn add_guild(connection: &mut SqliteConnection, snowflake_id: Snowflake) -> 
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .context("Failed to insert guild")?;
+        .with_context(|| format!("add_guild::Failed to insert guild {snowflake_id}"))?;
 
     Ok(())
 }
@@ -74,7 +74,9 @@ pub fn add_guild_connection(
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .context("Failed to insert user")?;
+        .with_context(|| {
+            format!("add_guild_connection::Failed to insert user {user_snowflake_id}")
+        })?;
 
     use crate::schema::guilds::dsl::*;
     diesel::insert_into(guilds)
@@ -83,7 +85,9 @@ pub fn add_guild_connection(
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .context("Failed to insert guild")?;
+        .with_context(|| {
+            format!("add_guild_connection::Failed to insert guild {guild_snowflake_id}")
+        })?;
 
     use crate::schema::guild_users::dsl::*;
 
@@ -94,7 +98,7 @@ pub fn add_guild_connection(
         })
         .on_conflict_do_nothing()
         .execute(connection)
-        .context("Failed to insert guild connection")?;
+        .with_context(|| format!("add_guild_connection::Failed to insert guild connection; guild: {guild_snowflake_id}, user: {user_snowflake_id}"))?;
 
     use crate::schema::minecraft_users::dsl::user_id;
     use crate::schema::minecraft_users::dsl::*;
@@ -107,7 +111,7 @@ pub fn add_guild_connection(
         .do_update()
         .set(minecraft_uuid.eq(minecraft_uuid_string))
         .execute(connection)
-        .context("Failed to insert minecraft account mapping")?;
+        .with_context(|| format!("add_guild_connection::Failed to insert minecraft account mapping; user: {user_snowflake_id}, mc: {minecraft_uuid_string}"))?;
 
     Ok(())
 }
@@ -169,7 +173,12 @@ pub fn get_guild_users(
         users = query
             .filter(guild_id.eq(i64(filter.guild_id)))
             .load(connection)
-            .context("Failed to load users")?;
+            .with_context(|| {
+                format!(
+                    "Failed to load users for guild {guild_id}",
+                    guild_id = filter.guild_id
+                )
+            })?;
     } else {
         users = query.load(connection).context("Failed to load users")?;
     }
@@ -190,7 +199,12 @@ pub fn get_role_mappings(
         mappings = query
             .filter(role_id.eq(i64(filter.role_id)))
             .load(connection)
-            .context("Failed to load role mappings")?;
+            .with_context(|| {
+                format!(
+                    "Failed to load role mappings for guild {guild_id}",
+                    guild_id = filter.role_id
+                )
+            })?;
     } else {
         mappings = query
             .load(connection)

@@ -1,8 +1,23 @@
-*.env
-env.*
+**/.DS_Store
+**/.dockerignore
+**/.env
+/example.env
+**/.git
+**/.gitignore
+/.github/
+**/.project
+**/.settings
+**/.toolstarget
+**/.vs
+**/.vscode
+**/docker-compose*
+**/compose.y*ml
+**/Dockerfile*
 
-debug/
-target/
+/bin/
+/target/
+/debug/
+LICENSE*
+README.md
 
-docker-compose.yml
-docker-compose.*.yml
+docker-compose*.yml

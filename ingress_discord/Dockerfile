@@ -1,45 +1,65 @@
-FROM rust:1.81.0-alpine AS base
+# escape=\
+# syntax=docker/dockerfile:1
 
-RUN apk update && apk add --no-cache musl-dev
+ARG RUST_VERSION=1.91.0
+ARG ALPINE_VERSION
 
-RUN cargo install cargo-chef --version ^0.1
+FROM rust:${RUST_VERSION}-alpine${ALPINE_VERSION} AS build
 
 WORKDIR /app
 
-ARG RUST_ENVIRONMENT
-ENV RUST_ENVIRONMENT=${RUST_ENVIRONMENT:-production}
-
-FROM base AS planner
-
-COPY . .
-
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo chef prepare --recipe-path recipe.json
-
-FROM base AS builder
-
-COPY --from=planner /app/recipe.json recipe.json
-
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo chef cook --release --recipe-path recipe.json
+# Install host build dependencies.
+RUN apk add --no-cache \
+    clang \
+    lld \
+    musl-dev \
+    git
 
 ARG VERSION
 ENV VERSION=${VERSION:-dev}
 
-COPY . .
+# Build the application.
+# Leverage a cache mount to /usr/local/cargo/registry/
+# for downloaded dependencies, a cache mount to /usr/local/cargo/git/db
+# for git repository dependencies, and a cache mount to /app/target/ for
+# compiled dependencies which will speed up subsequent builds.
+# Leverage a bind mount to the src directory to avoid having to copy the
+# source code into the container. Once built, copy the executable to an
+# output directory before the cache mounted /app/target is unmounted.
+RUN --mount=type=bind,source=src,target=src \
+    --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
+    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+    --mount=type=bind,source=build.rs,target=build.rs \
+    --mount=type=bind,source=migrations,target=migrations \
+    --mount=type=bind,source=diesel.toml,target=diesel.toml \
+    --mount=type=cache,target=/app/target/ \
+    --mount=type=cache,target=/usr/local/cargo/git/db \
+    --mount=type=cache,target=/usr/local/cargo/registry/ \
+cargo build --locked --release --bins && \
+cp ./target/release/ingress /bin/ingress && \
+cp ./target/release/register /bin/register
 
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo build --release --bins
+################################################################################
+# Create a new stage for running the application that contains the minimal
+# runtime dependencies for the application.
+FROM alpine:${ALPINE_VERSION:-latest} AS deploy
 
-FROM alpine:latest AS runtime
+# Create a non-privileged user that the app will run under.
+# See https://docs.docker.com/go/dockerfile-user-best-practices/
+ARG UID=10001
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
+USER appuser
 
-WORKDIR /
-
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-
-COPY --from=builder /app/target/release/ingress .
-COPY --from=builder /app/target/release/register .
+COPY --from=build /bin/ingress /bin/ingress
+COPY --from=build /bin/register /bin/register
 
 EXPOSE 3000
 
-ENTRYPOINT ["./ingress"]
+ENTRYPOINT ["/bin/ingress"]

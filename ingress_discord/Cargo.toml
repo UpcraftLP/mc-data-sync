@@ -13,7 +13,7 @@ thiserror = "2.0.17"
 tokio = { version = "1.41.1", features = ["full"] }
 tokio-cron-scheduler = { version = "0.15.1", features = ["english", "tracing-subscriber"] }
 tracing-subscriber = { version = "0.3.20", features = ["chrono", "env-filter", "json"] }
-reqwest = { version = "0.12.24", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "0.12.24", default-features = false, features = ["json", "rustls-tls-native-roots"] }
 diesel = { version = "2.3.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "chrono", "serde_json", "r2d2"] }
 diesel_migrations = { version = "2.3.0", features = ["sqlite"] }
 libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
@@ -31,7 +31,7 @@ tracing = { version = "0.1.41", features = ["async-await"] }
 
 [patch.crates-io]
 #rusty_interaction = { git = "https://github.com/showengineer/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }
-rusty_interaction = { git = "https://github.com/UpcraftLP/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }
+rusty_interaction = { git = "https://github.com/UpcraftLP/rusty-interaction.git", rev = "e6847bfc773eda5215c4558de9c4215838b62afa" }
 
 [build-dependencies]
 built = { version = "0.8.0", features = ["chrono", "git2", "semver"] }

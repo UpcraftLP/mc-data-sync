@@ -49,7 +49,7 @@ pub(crate) async fn add_role_mapping_command(
         return ctx
             .respond()
             .is_ephemeral(true)
-            .content(format!("Invalid Identifier `{reward_id_raw}` - {e}"))
+            .content(format!("Invalid Identifier `{reward_id_raw}` - {e:#}"))
             .finish();
     }
     let reward_id: Identifier = reward_id.unwrap();
@@ -73,13 +73,13 @@ pub(crate) async fn add_role_mapping_command(
             .expect("Failed to get connection from pool");
 
         if let Err(e) = db::add_guild(&mut conn, guild_snowflake) {
-            bail!("failed to add guild: {e}");
+            bail!("failed to add guild: {e:#}");
         }
 
         if let Err(e) =
             db::register_role_mapping(&mut conn, guild_snowflake, role_snowflake, &reward_id_clone)
         {
-            bail!("failed to add role mapping: {e}");
+            bail!("failed to add role mapping: {e:#}");
         }
         Ok(())
     })

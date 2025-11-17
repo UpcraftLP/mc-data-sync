@@ -10,7 +10,7 @@ pub(crate) const COMMAND_NAME: &str = "reload";
 
 lazy_static! {
     static ref ENABLED: bool = std::env::var("ENABLE_RELOAD_COMMAND")
-        .map(|s| s.trim_ascii().to_ascii_lowercase() == "true")
+        .map(|s| s.trim_ascii().eq_ignore_ascii_case("true"))
         .unwrap_or(false);
 }
 

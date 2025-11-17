@@ -1,10 +1,11 @@
 use crate::discord::members;
-use crate::util::{db, http, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker};
+use crate::util::{
+    db, http, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker,
+};
 use actix_web::web;
 use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use r2d2::Pool;
-use reqwest::header;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
@@ -85,15 +86,21 @@ pub(crate) async fn link_command(
 
     let error: Option<String>;
 
-    let client = reqwest::Client::builder().user_agent(http::user_agent()).build().expect("failed to construct http client"); //TODO better error handling
+    let client = reqwest::Client::builder()
+        .user_agent(http::user_agent())
+        .build()
+        .expect("failed to construct http client"); //TODO better error handling
     match client.get(&url).send().await {
         Ok(response) => match response.json::<PlayerDbResponse>().await {
             Ok(db_response) => {
                 if !db_response.success {
                     if db_response.code == "minecraft.invalid_username" {
-                        error = Some(format!("No player found for '{}'", username_or_id));
+                        error = Some(format!("No player found for '{username_or_id}'"));
                     } else {
-                        error!("Received error from PlayerDb: {}", db_response.message);
+                        error!(
+                            "Received error from PlayerDb: {message}",
+                            message = db_response.message
+                        );
                         error = Some(db_response.message);
                     }
                 } else {
@@ -127,15 +134,15 @@ pub(crate) async fn link_command(
                                 error = Some("Internal Server Error".to_string());
                             } else {
                                 info!(
-                                    "Link success: Discord: {}, Minecraft: {}",
-                                    discord_snowflake, &player_data.username
+                                    "Link success: Discord: {discord_snowflake}, Minecraft: {mc_username}",
+                                    mc_username = &player_data.username
                                 );
                                 return ctx
                                     .respond()
                                     .is_ephemeral(true)
                                     .content(format!(
-                                        "Successfully linked with user: `{}`",
-                                        &player_data.username
+                                        "Successfully linked with user: `{mc_username}`",
+                                        mc_username = &player_data.username
                                     ))
                                     .finish();
                             }
@@ -161,8 +168,8 @@ pub(crate) async fn link_command(
     ctx.respond()
         .is_ephemeral(true)
         .content(format!(
-            "Failed to link: `{}`",
-            error.unwrap_or("unknown error".to_string())
+            "Failed to link: `{err}`",
+            err = error.unwrap_or("unknown error".to_string())
         ))
         .finish()
 }

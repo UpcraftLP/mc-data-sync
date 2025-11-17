@@ -15,8 +15,8 @@ pub fn load() -> anyhow::Result<Config> {
 
     if !final_path.try_exists()? {
         eprintln!(
-            "Config file not found at {}, creating default config...",
-            &final_path.to_string_lossy().replace("\\", "/")
+            "Config file not found at {path}, creating default config...",
+            path = &final_path.to_string_lossy().replace("\\", "/")
         );
         return create_default_config(&final_path);
     }

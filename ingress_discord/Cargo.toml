@@ -31,7 +31,7 @@ tracing = { version = "0.1.40", features = ["async-await"] }
 
 [patch.crates-io]
 #rusty_interaction = { git = "https://github.com/showengineer/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }
-rusty_interaction = { git = "https://github.com/UpcraftLP/rusty-interaction.git", rev = "1d2ab68141db88757664366a5ffc2c1c2b777668" }
+rusty_interaction = { git = "https://github.com/UpcraftLP/rusty-interaction.git", rev = "32281f85fa94aaa71a9a331dc33fbd2860895aea" }
 
 [build-dependencies]
 built = { version = "0.7.5", features = ["chrono", "git2", "semver"] }

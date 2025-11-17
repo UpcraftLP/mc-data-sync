@@ -97,7 +97,7 @@ pub async fn update_users(
 
     let mut desired_state: HashMap<Id<UserMarker>, Vec<Identifier>> = HashMap::new();
     for (guild_id, active_mappings) in by_guild {
-        info!("Checking guild {}", guild_id);
+        info!("Checking guild {guild_id}");
 
         // TODO this needs to be chained if it gets 1000 users at once
         // TODO error handling
@@ -197,8 +197,8 @@ pub async fn update_single_user(
 
     if data.entitlements.is_empty() {
         info!(
-            "No entitlements to update for user {}",
-            mc_user.minecraft_uuid
+            "No entitlements to update for user {mc_uuid}",
+            mc_uuid = mc_user.minecraft_uuid
         );
         return Ok(());
     }
@@ -214,15 +214,17 @@ pub async fn update_single_user(
         .await
         .with_context(|| {
             format!(
-                "Failed to send request to {} for user {}",
-                *API_URL, mc_user.minecraft_uuid
+                "Failed to send request to {api_url} for user {mc_uuid}",
+                api_url = *API_URL,
+                mc_uuid = mc_user.minecraft_uuid
             )
         })?
         .error_for_status()
         .with_context(|| {
             format!(
-                "Failed to send request to {} for user {}",
-                *API_URL, mc_user.minecraft_uuid
+                "Failed to send request to {api_url} for user {mc_uuid}",
+                api_url = *API_URL,
+                mc_uuid = mc_user.minecraft_uuid
             )
         })?;
 

@@ -137,8 +137,8 @@ pub async fn update_users(
             ))
             .json(&data)
             .send()
-            .await?
-            .error_for_status()?;
+            .await.with_context(|| format!("update_users::Unable to send request for MC user {mc_uuid}, entitlements: {entitlements:?}", mc_uuid = data.uuid, entitlements = data.entitlements))?
+            .error_for_status().with_context(|| format!("update_users::Received error status when trying to add entitlements for MC user {mc_uuid}, entitlements: {entitlements:?}", mc_uuid = data.uuid, entitlements = data.entitlements))?;
     }
     Ok(())
 }

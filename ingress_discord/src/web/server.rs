@@ -1,6 +1,6 @@
-use actix_web::{web, App, HttpRequest, HttpServer};
-use diesel::r2d2::ConnectionManager;
+use actix_web::{App, HttpRequest, HttpServer, web};
 use diesel::SqliteConnection;
+use diesel::r2d2::ConnectionManager;
 use r2d2::Pool;
 use rusty_interaction::handler::InteractionHandler;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};

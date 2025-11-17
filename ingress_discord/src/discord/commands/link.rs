@@ -3,16 +3,16 @@ use crate::util::{
     db, http, snowflake_to_guild_marker, snowflake_to_role_marker, snowflake_to_user_marker,
 };
 use actix_web::web;
-use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
+use diesel::r2d2::ConnectionManager;
 use r2d2::Pool;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};
 use rusty_interaction::{defer, slash_command};
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
-use twilight_model::id::marker::RoleMarker;
 use twilight_model::id::Id;
+use twilight_model::id::marker::RoleMarker;
 
 pub(crate) const COMMAND_NAME: &str = "link";
 
@@ -122,7 +122,7 @@ pub(crate) async fn link_command(
                     .expect("blocking error")
                     {
                         Ok(()) => {
-                            if let Err(cause) = members::update_single_user(
+                            match members::update_single_user(
                                 pool.clone(),
                                 snowflake_to_user_marker(discord_snowflake),
                                 snowflake_to_guild_marker(guild_snowflake),
@@ -130,21 +130,24 @@ pub(crate) async fn link_command(
                             )
                             .await
                             {
-                                error!(%cause, "Failed to update user");
-                                error = Some("Internal Server Error".to_string());
-                            } else {
-                                info!(
-                                    "Link success: Discord: {discord_snowflake}, Minecraft: {mc_username}",
-                                    mc_username = &player_data.username
-                                );
-                                return ctx
-                                    .respond()
-                                    .is_ephemeral(true)
-                                    .content(format!(
-                                        "Successfully linked with user: `{mc_username}`",
+                                Err(cause) => {
+                                    error!(%cause, "Failed to update user");
+                                    error = Some("Internal Server Error".to_string());
+                                }
+                                _ => {
+                                    info!(
+                                        "Link success: Discord: {discord_snowflake}, Minecraft: {mc_username}",
                                         mc_username = &player_data.username
-                                    ))
-                                    .finish();
+                                    );
+                                    return ctx
+                                        .respond()
+                                        .is_ephemeral(true)
+                                        .content(format!(
+                                            "Successfully linked with user: `{mc_username}`",
+                                            mc_username = &player_data.username
+                                        ))
+                                        .finish();
+                                }
                             }
                         }
                         Err(cause) => {

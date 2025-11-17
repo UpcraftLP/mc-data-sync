@@ -1,11 +1,11 @@
 use crate::discord::commands;
+use rusty_interaction::Builder;
 use rusty_interaction::handler::InteractionHandler;
+use rusty_interaction::types::Snowflake;
 use rusty_interaction::types::application::{
     ApplicationCommand, ApplicationCommandOption, ApplicationCommandOptionType,
     SlashCommandDefinitionBuilder,
 };
-use rusty_interaction::types::Snowflake;
-use rusty_interaction::Builder;
 
 const BASE_URL: &str = rusty_interaction::BASE_URL;
 

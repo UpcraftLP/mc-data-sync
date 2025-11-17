@@ -1,9 +1,8 @@
-use anyhow::{anyhow, Context};
-use diesel::r2d2::ConnectionManager;
+use anyhow::{Context, anyhow};
 use diesel::SqliteConnection;
-use futures::TryFutureExt;
+use diesel::r2d2::ConnectionManager;
 use ingress_discord::discord;
-use ingress_discord::discord::{members, BotInfo};
+use ingress_discord::discord::{BotInfo, members};
 use ingress_discord::util::{config, db};
 use ingress_discord::web;
 use r2d2::Pool;
@@ -44,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
             let value = pool_clone.clone();
             async move {
                 if let Err(cause) =
-                    actix_web::web::block(move || members::update_users(value, None).into_future())
+                    actix_web::web::block(move || members::update_users(value, None))
                         .await
                         .expect("blocking error")
                         .await
@@ -62,7 +61,7 @@ async fn main() -> anyhow::Result<()> {
             let value = pool_clone.clone();
             async move {
                 if let Err(cause) =
-                    actix_web::web::block(move || members::update_users(value, None).into_future())
+                    actix_web::web::block(move || members::update_users(value, None))
                         .await
                         .expect("blocking error")
                         .await

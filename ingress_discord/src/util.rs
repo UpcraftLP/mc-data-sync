@@ -1,6 +1,6 @@
 use rusty_interaction::types::Snowflake;
-use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use twilight_model::id::Id;
+use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 
 pub mod config;
 pub mod db;

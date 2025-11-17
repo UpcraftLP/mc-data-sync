@@ -1,5 +1,5 @@
-use crate::discord::register::update_global_commands;
 use crate::discord::BotInfo;
+use crate::discord::register::update_global_commands;
 use lazy_static::lazy_static;
 use rusty_interaction::handler::InteractionHandler;
 use rusty_interaction::types::interaction::{Context, InteractionResponse};

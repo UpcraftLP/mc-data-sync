@@ -7,16 +7,16 @@ use crate::util::identifier::Identifier;
 use crate::util::{db, http};
 use actix_web::web;
 use anyhow::Context;
-use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
+use diesel::r2d2::ConnectionManager;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use r2d2::Pool;
 use std::collections::HashMap;
 use tracing::info;
 use twilight_http::Client;
-use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 use twilight_model::id::Id;
+use twilight_model::id::marker::{GuildMarker, RoleMarker, UserMarker};
 
 lazy_static! {
     static ref CLIENT: Client =

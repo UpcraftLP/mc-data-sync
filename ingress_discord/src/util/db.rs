@@ -1,17 +1,17 @@
 use crate::models::*;
 use crate::util::identifier::Identifier;
 use anyhow::Context;
+use diesel::RunQueryDsl;
 use diesel::prelude::*;
 use diesel::r2d2::ConnectionManager;
-use diesel::RunQueryDsl;
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+use diesel_migrations::{EmbeddedMigrations, MigrationHarness, embed_migrations};
 use r2d2::Pool;
 use rusty_interaction::types::Snowflake;
 use std::collections::HashMap;
 use std::error::Error;
 use tracing::info;
-use twilight_model::id::marker::UserMarker;
 use twilight_model::id::Id;
+use twilight_model::id::marker::UserMarker;
 
 pub fn apply_migrations(
     pool: &Pool<ConnectionManager<SqliteConnection>>,

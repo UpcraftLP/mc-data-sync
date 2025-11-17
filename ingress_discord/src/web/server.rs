@@ -3,6 +3,7 @@ use diesel::r2d2::ConnectionManager;
 use diesel::SqliteConnection;
 use r2d2::Pool;
 use rusty_interaction::handler::InteractionHandler;
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::sync::Mutex;
 
 #[derive(Clone)]
@@ -34,7 +35,7 @@ pub async fn start(
             ),
         )
     })
-    .bind(format!("0.0.0.0:{}", port))?
+    .bind(SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), port))?
     .run()
     .await
     .map_err(Into::into)

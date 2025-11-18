@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import type { Handle, HandleServerError } from '@sveltejs/kit';
+import type { Handle, HandleClientError, HandleServerError } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 const authorizationHandle: Handle = async ({ event, resolve }) => {
@@ -38,3 +38,9 @@ export const handleError: HandleServerError = async ({ error, status }) => {
 		console.log(error);
 	}
 };
+
+export const handleClientError: HandleClientError = async ({ error, status }) => {
+	if (status !== 404) {
+		console.log(error);
+	}
+}

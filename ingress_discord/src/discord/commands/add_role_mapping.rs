@@ -87,7 +87,7 @@ pub(crate) async fn add_role_mapping_command(
     .expect("blocking error");
 
     if let Err(cause) = db_err {
-        error!(%cause, "Failed to add role mapping `{role_snowflake}->{reward_id}`");
+        error!("Failed to add role mapping `{role_snowflake}->{reward_id}`: {cause:#}");
         return ctx
             .respond()
             .is_ephemeral(true)
@@ -98,7 +98,7 @@ pub(crate) async fn add_role_mapping_command(
     }
 
     if let Err(cause) = members::create_entitlement(&reward_id).await {
-        error!(%cause, "Failed to send create entitlement request for `{reward_id}`");
+        error!("Failed to send create entitlement request for `{reward_id}`: {cause:#}");
         return ctx
             .respond()
             .is_ephemeral(true)
@@ -116,7 +116,7 @@ pub(crate) async fn add_role_mapping_command(
         .expect("blocking error")
         .await
     {
-        error!(%cause, "Failed to apply update to new users");
+        error!("Failed to apply update to new users: {cause:#}");
         return ctx.respond().is_ephemeral(true).content(format!("Successfully added reward `{reward_id}` for <@&{role_snowflake}>\n\n`ERROR:` Unable to update users, will retry later!```\n{cause}\n```")).finish();
     }
 

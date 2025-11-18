@@ -131,7 +131,7 @@ pub(crate) async fn link_command(
                             .await
                             {
                                 Err(cause) => {
-                                    error!(%cause, "Failed to update user");
+                                    error!("Failed to update user: {cause:#}");
                                     error = Some("Internal Server Error".to_string());
                                 }
                                 _ => {
@@ -151,19 +151,19 @@ pub(crate) async fn link_command(
                             }
                         }
                         Err(cause) => {
-                            error!(%cause, "Failed add guild connection");
+                            error!("Failed add guild connection: {cause:#}");
                             error = Some("Internal Server Error".to_string());
                         }
                     }
                 }
             }
             Err(cause) => {
-                error!(%cause, "Failed to parse api response");
+                error!("Failed to parse api response: {cause:#}");
                 error = Some("Internal Server Error".to_string());
             }
         },
         Err(cause) => {
-            error!(%cause, "Failed to link! DiscordUser: {discord_snowflake}, Input: '{username_or_id}'");
+            error!("Failed to link! DiscordUser: {discord_snowflake}, Input: '{username_or_id}', Error: {cause:#}");
             error = Some("Internal Server Error".to_string());
         }
     }

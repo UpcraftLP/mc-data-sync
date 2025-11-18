@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
                         .expect("blocking error")
                         .await
                 {
-                    error!(%cause, "Failed to run scheduled user update");
+                    error!("Failed to run scheduled user update: {cause:#}");
                 }
             }
         })
@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
                         .expect("blocking error")
                         .await
                 {
-                    error!(%cause, "Failed to run scheduled user update");
+                    error!("Failed to run scheduled user update: {cause:#}");
                 }
             }
         })

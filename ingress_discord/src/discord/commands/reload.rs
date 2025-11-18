@@ -62,7 +62,7 @@ pub(crate) async fn reload_command(
             .is_ephemeral(true)
             .finish(),
         Err(cause) => {
-            error!(%cause, "Failed to reload commands");
+            error!("Failed to reload commands: {cause:#}");
             ctx.respond()
                 .content("Failed to reload commands")
                 .is_ephemeral(true)

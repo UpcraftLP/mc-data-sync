@@ -12,7 +12,7 @@ on:
       - 'datasync-minecraft/**'
 
 env:
-  JAVA_VERSION: 21
+  JAVA_VERSION: 25
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'microsoft'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
       - name: Grant execute permission for gradlew
         working-directory: datasync-minecraft
         run: chmod +x ./gradlew
@@ -33,25 +33,25 @@ jobs:
         working-directory: datasync-minecraft
         run: ./gradlew build
       - name: Upload artifacts (Fabric 1.19.2)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.19.2-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.19.2-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.20.1)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.20.1-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.20.1-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.21.1)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.21.1-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.21.1-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.21.9)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.21.9-Fabric-${{ github.sha }}

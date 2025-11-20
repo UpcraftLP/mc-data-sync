@@ -44,6 +44,10 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
         });
     }
 
+    public static void registerServer() {
+        // NO-OP
+    }
+
     @Environment(EnvType.CLIENT)
     public void handle(LocalPlayer localPlayer, PacketSender packetSender) {
         if (this.refreshAll()) {

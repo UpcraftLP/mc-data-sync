@@ -6,6 +6,7 @@ import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
 import dev.upcraft.datasync.content.DataStore;
 import dev.upcraft.datasync.net.C2SUpdatePlayerDataPacket;
+import dev.upcraft.datasync.net.S2CUpdatePlayerDataPacket;
 import dev.upcraft.datasync.util.EntitlementsImpl;
 import dev.upcraft.datasync.util.ModHelper;
 import net.fabricmc.api.ModInitializer;
@@ -67,6 +68,7 @@ public class DataSyncMod implements ModInitializer {
             }
         });
         C2SUpdatePlayerDataPacket.register();
+        S2CUpdatePlayerDataPacket.registerServer();
     }
 
     private static boolean checkInternetAccess() {

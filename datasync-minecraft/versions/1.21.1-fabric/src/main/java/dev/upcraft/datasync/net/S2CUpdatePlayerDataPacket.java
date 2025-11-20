@@ -37,8 +37,11 @@ public record S2CUpdatePlayerDataPacket(UUID targetId, @Nullable ResourceLocatio
 
     @Environment(EnvType.CLIENT)
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(TYPE, CODEC);
         ClientPlayNetworking.registerGlobalReceiver(TYPE, S2CUpdatePlayerDataPacket::handle);
+    }
+
+    public static void registerServer() {
+        PayloadTypeRegistry.playS2C().register(TYPE, CODEC);
     }
 
     @Environment(EnvType.CLIENT)

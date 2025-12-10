@@ -2,7 +2,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("fabric-loom") version "1.13.4"
+    id("fabric-loom") version "1.14.5"
     id("maven-publish")
 }
 

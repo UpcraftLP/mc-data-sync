@@ -2,7 +2,6 @@ package dev.upcraft.datasync.testmod;
 
 import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
-import dev.upcraft.datasync.api.ext.DataSyncPlayerExt;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.network.chat.Component;
@@ -31,11 +30,7 @@ public class Testmod implements ModInitializer {
                     SUPPORTER_DATA_SYNC_TOKEN.fetch(player.getUUID());
 
                     // get the data for the player
-                    // FIXME switch back to using injected interfaces once StoneCutter suppports it
-                    //  https://github.com/stonecutter-versioning/stonecutter/issues/12
-                    // Optional<SupporterData> optional = player.datasync$get(SUPPORTER_DATA_SYNC_TOKEN);
-                    //noinspection RedundantCast
-                    Optional<SupporterData> optional = ((DataSyncPlayerExt) player).datasync$get(SUPPORTER_DATA_SYNC_TOKEN);
+                    Optional<SupporterData> optional = player.datasync$get(SUPPORTER_DATA_SYNC_TOKEN);
 
                     optional.ifPresentOrElse(data -> {
                         var messageComponent = Component.literal(data.message()).withStyle(s -> s.withColor(data.color()));

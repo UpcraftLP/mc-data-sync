@@ -50,6 +50,6 @@
 		"fabricloader": "*",
 		"minecraft": "${minecraft_version_range}",
 		"java": ">=${java_version}",
-		"fabric-api": "*"
+		"fabric-networking-api-v1": "*"
 	}
 }

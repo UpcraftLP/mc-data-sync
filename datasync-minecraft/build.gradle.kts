@@ -131,6 +131,8 @@ if (loader == Loaders.FABRIC) {
                 sourceSet(sourceSets["testmod"])
             }
         }
+
+        createRemapConfigurations(sourceSets["testmod"])
     }
 }
 
@@ -147,12 +149,14 @@ dependencies {
         mappings(loom.officialMojangMappings())
         modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
 
-        // Fabric API. This is technically optional, but you probably want it anyway.
-        modImplementation("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
+        modImplementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
 
         findProperty("modmenu_version")?.let {
             modLocalRuntime("com.terraformersmc:modmenu:${it}")
         }
+
+        // make testmod depend on full fabric API
+        "modTestmodImplementation"("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
     }
 
     "testmodImplementation"(sourceSets["main"].output)

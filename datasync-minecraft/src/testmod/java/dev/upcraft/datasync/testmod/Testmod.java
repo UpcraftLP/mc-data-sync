@@ -22,7 +22,7 @@ public class Testmod implements ModInitializer {
             var stack = player.getItemInHand(hand);
 
             // when right clicking with a Netherite Axe, show a message to the player
-            if (stack.is(Items.NETHERITE_AXE) && !world.isClientSide()) {
+            if (!player.isSpectator() && stack.is(Items.NETHERITE_AXE)) {
                 if (!world.isClientSide()) {
 
                     SUPPORTER_DATA_SYNC_TOKEN.fetch(player.getUUID());

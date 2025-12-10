@@ -6,8 +6,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 
@@ -34,8 +32,8 @@ public class Testmod implements ModInitializer {
 
                     optional.ifPresentOrElse(data -> {
                         var messageComponent = Component.literal(data.message()).withStyle(s -> s.withColor(data.color()));
-                        sendMessage((ServerPlayer) player, Component.literal("Your message is: ").append(messageComponent));
-                    }, () -> sendMessage((ServerPlayer) player, Component.literal("You do not have any data stored!")));
+                        sendMessage(player, Component.literal("Your message is: ").append(messageComponent));
+                    }, () -> sendMessage(player, Component.literal("You do not have any data stored!")));
                 }
 
                 //? <1.21.4 {
@@ -61,7 +59,7 @@ public class Testmod implements ModInitializer {
         //?}
     }
 
-    private static void sendMessage(ServerPlayer player, Component message) {
+    private static void sendMessage(Player player, Component message) {
         player.sendSystemMessage(message);
     }
 }

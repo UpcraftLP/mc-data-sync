@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
@@ -33,26 +33,32 @@ jobs:
         working-directory: datasync-minecraft
         run: ./gradlew build
       - name: Upload artifacts (Fabric 1.19.2)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.19.2-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.19.2-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.20.1)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.20.1-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.20.1-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.21.1)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.21.1-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.21.1-fabric/build/libs/*.jar
       - name: Upload artifacts (Fabric 1.21.9)
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: ${{ github.event.repository.name }}-1.21.9-Fabric-${{ github.sha }}
           path: datasync-minecraft/versions/1.21.9-fabric/build/libs/*.jar
+      - name: Upload artifacts (Fabric 26.1)
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: ${{ github.event.repository.name }}-26.1-Fabric-${{ github.sha }}
+          path: datasync-minecraft/versions/26.1-fabric/build/libs/*.jar

@@ -2,26 +2,11 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("fabric-loom") version "1.14.5"
+    id("net.fabricmc.fabric-loom") version "1.15.4"
     id("maven-publish")
 }
 
-object Loaders {
-    const val FABRIC = "fabric"
-    const val NEOFORGE = "neoforge"
-}
-
-// TODO neoforge support?
-val loader = Loaders.FABRIC
-
-val env: Map<String, String> = System.getenv()
-
-val javaVersion = when {
-    stonecutter.eval(stonecutter.current.version, ">=1.20.5") -> 21
-    stonecutter.eval(stonecutter.current.version, ">=1.18") -> 17
-    stonecutter.eval(stonecutter.current.version, ">=1.17") -> 16
-    else -> 8
-}
+val javaVersion = 25
 
 class ModData {
     val id = property("mod_id").toString()
@@ -42,13 +27,19 @@ val mod = ModData()
 group = mod.group
 
 val now = Date()
-val buildTime: String = env["BUILD_TIME"] ?: SimpleDateFormat("yyyyMMddHHmmss").format(now)
+val buildTime: String = providers.environmentVariable("BUILD_TIME").orElse(SimpleDateFormat("yyyyMMddHHmmss").format(now)).get()
 
-val isPreviewBuild = env["TAG"]?.matches(".+-.+".toRegex()) ?: true
-val buildNumber = env["TAG"] ?: env["BUILD_NUMBER"]?.let { "build.$it" } ?: buildTime
+val isPreviewBuild = providers.environmentVariable("TAG").map { it.matches(".+-.+".toRegex()) }.orElse(true).get()
+val buildNumber = providers.environmentVariable("TAG").orElse(providers.environmentVariable("BUILD_NUMBER").map { "build.$it" }).orElse(buildTime).get()
 version = buildString {
-    append(env["TAG"] ?: "${stonecutter.current.project}-development")
-    if (env["TAG"] == null && isPreviewBuild) append("+$buildNumber")
+    providers.environmentVariable("TAG").orNull?.let {
+        append(it)
+    } ?: run {
+        append("${stonecutter.current.project}-development")
+        if (isPreviewBuild) {
+            append("+$buildNumber")
+        }
+    }
 }
 base {
     archivesName.set("datasync-minecraft-${stonecutter.current.project}")
@@ -56,6 +47,13 @@ base {
 
 stonecutter {
     dependencies["java"] = javaVersion.toString()
+
+    replacements.string(current.parsed >= "1.21.11") {
+        replace("ResourceLocation", "Identifier")
+    }
+    replacements.string(current.parsed < "26.1") {
+        replace("net/minecraft/world/entity/player/Player", "net/minecraft/class_1657")
+    }
 }
 
 sourceSets.create("testmod") {
@@ -65,99 +63,92 @@ sourceSets.create("testmod") {
     }
 }
 
-if (loader == Loaders.FABRIC) {
-    loom {
-        runConfigs {
-            configureEach {
-                runDir("run")
-                ideConfigGenerated(true)
-                if (project.hasProperty("mc_java_agent_path")) {
-                    vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
-                }
-
-                property("fabric.log.level", "info")
-                property("java.net.preferIPv4Stack", "true")
+loom {
+    runConfigs {
+        configureEach {
+            runDir("run")
+            ideConfigGenerated(true)
+            if (project.hasProperty("mc_java_agent_path")) {
+                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
             }
 
-            "client" {
-                client()
-                configName = "Fabric Client"
+            property("fabric.log.level", "info")
+            property("java.net.preferIPv4Stack", "true")
+        }
 
-                if (project.hasProperty("mc_uuid")) {
-                    programArg("--uuid=${project.findProperty("mc_uuid")}")
-                }
+        "client" {
+            client()
+            configName = "Fabric Client"
 
-                if (project.hasProperty("mc_username")) {
-                    programArg("--username=${project.findProperty("mc_username")}")
-                }
-
-                if (project.hasProperty("mc_java_agent_path")) {
-                    vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
-                }
+            if (project.hasProperty("mc_uuid")) {
+                programArg("--uuid=${project.findProperty("mc_uuid")}")
             }
 
-            "server" {
-                server()
-                configName = "Fabric Server"
+            if (project.hasProperty("mc_username")) {
+                programArg("--username=${project.findProperty("mc_username")}")
             }
 
-            create("testmodClient") {
-                client()
-                configName = "Fabric Testmod Client"
-                source(sourceSets["testmod"])
-
-                if (project.hasProperty("mc_uuid")) {
-                    programArg("--uuid=${project.findProperty("mc_uuid")}")
-                }
-
-                if (project.hasProperty("mc_username")) {
-                    programArg("--username=${project.findProperty("mc_username")}")
-                }
-            }
-
-            create("testmodServer") {
-                server()
-                configName = "Fabric Testmod Server"
-                source(sourceSets["testmod"])
+            if (project.hasProperty("mc_java_agent_path")) {
+                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
             }
         }
 
-        mods {
-            create("${mod.id}") {
-                sourceSet(sourceSets["main"])
+        "server" {
+            server()
+            configName = "Fabric Server"
+        }
+
+        create("testmodClient") {
+            client()
+            configName = "Fabric Testmod Client"
+            source(sourceSets["testmod"])
+
+            if (project.hasProperty("mc_uuid")) {
+                programArg("--uuid=${project.findProperty("mc_uuid")}")
             }
 
-            create("testmod") {
-                sourceSet(sourceSets["testmod"])
+            if (project.hasProperty("mc_username")) {
+                programArg("--username=${project.findProperty("mc_username")}")
             }
         }
 
-        createRemapConfigurations(sourceSets["testmod"])
+        create("testmodServer") {
+            server()
+            configName = "Fabric Testmod Server"
+            source(sourceSets["testmod"])
+        }
+    }
+
+    mods {
+        create("${mod.id}") {
+            sourceSet(sourceSets["main"])
+        }
+
+        create("testmod") {
+            sourceSet(sourceSets["testmod"])
+        }
     }
 }
 
 repositories {
-    if (loader == Loaders.FABRIC) {
-        maven("https://maven.terraformersmc.com/releases")
-    }
+    maven("https://maven.terraformersmc.com/releases")
 }
 
 dependencies {
-    if (loader == Loaders.FABRIC) {
-        // To change the versions see the gradle.properties file
-        minecraft("com.mojang:minecraft:${mod.minecraftVersion}")
-        mappings(loom.officialMojangMappings())
-        modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
+    // To change the versions see the gradle.properties file
+    minecraft("com.mojang:minecraft:${mod.minecraftVersion}")
+    implementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
 
-        modImplementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
+    implementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
 
-        findProperty("modmenu_version")?.let {
-            modLocalRuntime("com.terraformersmc:modmenu:${it}")
+    findProperty("modmenu_version")?.let {
+        localRuntime("com.terraformersmc:modmenu:${it}") {
+            exclude(group = "net.fabricmc", module = "fabric-api")
         }
-
-        // make testmod depend on full fabric API
-        "modTestmodImplementation"("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
     }
+
+    // make testmod depend on full fabric API
+    "testmodImplementation"("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
 
     "testmodImplementation"(sourceSets["main"].output)
 }
@@ -188,7 +179,6 @@ tasks.withType<ProcessResources> {
 }
 
 tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
     options.release.set(javaVersion)
 }
 
@@ -203,7 +193,6 @@ java {
 }
 
 tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
     options.release.set(javaVersion)
 }
 
@@ -249,12 +238,11 @@ publishing {
     }
 
     repositories {
-        env["MAVEN_UPLOAD_URL"]?.let { uploadUrl ->
-            maven {
-                url = uri(uploadUrl)
+        providers.environmentVariable("MAVEN_UPLOAD_URL").orNull?.let { url ->
+            maven(url) {
                 credentials {
-                    username = env["MAVEN_UPLOAD_USERNAME"]
-                    password = env["MAVEN_UPLOAD_PASSWORD"]
+                    username = providers.environmentVariable("MAVEN_UPLOAD_USERNAME").orNull
+                    password = providers.environmentVariable("MAVEN_UPLOAD_PASSWORD").orNull
                 }
             }
         }

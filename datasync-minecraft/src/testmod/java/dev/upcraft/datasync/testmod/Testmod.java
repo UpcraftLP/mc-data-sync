@@ -1,5 +1,6 @@
 package dev.upcraft.datasync.testmod;
 
+import com.mojang.logging.LogUtils;
 import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import net.fabricmc.api.ModInitializer;
@@ -8,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
+import org.slf4j.Logger;
 
 import java.util.Optional;
 
@@ -15,6 +17,7 @@ public class Testmod implements ModInitializer {
 
     public static final String MOD_ID = "testmod";
     public static final SyncToken<SupporterData> SUPPORTER_DATA_SYNC_TOKEN = DataSyncAPI.register(SupporterData.class, Testmod.id("test_data"), SupporterData.CODEC);
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     @Override
     public void onInitialize() {
@@ -36,18 +39,17 @@ public class Testmod implements ModInitializer {
                     }, () -> sendMessage(player, Component.literal("You do not have any data stored!")));
                 }
 
-                //? <1.21.4 {
+                //? >=1.21.4 {
+                /*return net.minecraft.world.InteractionResult.SUCCESS;
+                *///?} else {
                 return net.minecraft.world.InteractionResultHolder.success(stack);
-                //?} else {
-                /*return InteractionResult.SUCCESS;
-                *///?}
+                 //?}
             }
-
-            //? <1.21.4 {
-            return net.minecraft.world.InteractionResultHolder.pass(stack);
-            //?} else {
+            //? >=1.21.4 {
             /*return net.minecraft.world.InteractionResult.PASS;
-             *///?}
+            *///?} else {
+            return net.minecraft.world.InteractionResultHolder.pass(stack);
+             //?}
         });
     }
 
@@ -60,6 +62,16 @@ public class Testmod implements ModInitializer {
     }
 
     private static void sendMessage(Player player, Component message) {
+        //? >=26.1 {
+        /*LOGGER.info("[{}] {}", player.getPlainTextName(), message.getString());
+         *///?} else {
+        LOGGER.info("[{}] {}", player.getScoreboardName(), message.getString());
+        //?}
+
+        //? >=26.1 || <=1.21.1 {
         player.sendSystemMessage(message);
+         //?} else {
+        /*((net.minecraft.server.level.ServerPlayer) player).sendSystemMessage(message);
+        *///?}
     }
 }

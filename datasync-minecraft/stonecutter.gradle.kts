@@ -9,3 +9,7 @@ stonecutter parameters {
 
     constants.match(current, loaders)
 }
+
+stonecutter handlers {
+    inherit("java", "json")
+}

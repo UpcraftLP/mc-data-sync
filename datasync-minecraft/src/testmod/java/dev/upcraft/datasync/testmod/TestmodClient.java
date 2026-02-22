@@ -27,17 +27,17 @@ public class TestmodClient implements ClientModInitializer {
                     Testmod.SUPPORTER_DATA_SYNC_TOKEN.setData(newData);
                 }
 
-                //? <1.21.4 {
-                return net.minecraft.world.InteractionResultHolder.success(stack);
-                //?} else {
+                //? >=1.21.4 {
                 /*return net.minecraft.world.InteractionResult.SUCCESS;
-                *///?}
+                *///?} else {
+                return net.minecraft.world.InteractionResultHolder.success(stack);
+                //?}
             }
-            //? <1.21.4 {
-            return net.minecraft.world.InteractionResultHolder.pass(stack);
-            //?} else {
+            //? >=1.21.4 {
             /*return net.minecraft.world.InteractionResult.PASS;
-            *///?}
+            *///?} else {
+            return net.minecraft.world.InteractionResultHolder.pass(stack);
+             //?}
         });
     }
 }

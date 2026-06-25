@@ -170,6 +170,8 @@ dependencies {
 tasks.withType<ProcessResources> {
     filteringCharset = "UTF-8"
 
+    exclude("META-INF/*mods.toml")
+
     val expandProps = mapOf(
         "version" to version,
         "mod_id" to mod.id,

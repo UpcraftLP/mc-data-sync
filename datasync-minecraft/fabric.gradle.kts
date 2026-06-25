@@ -77,30 +77,27 @@ loom {
             client()
             programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
             mainClass = "net.covers1624.devlogin.DevLogin"
-            displayName = "Fabric Client (:${project.name})"
         }
 
         named("server") {
             server()
-            displayName = "Fabric Server (:${project.name})"
         }
 
         create("testmodClient") {
             client()
             programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
             mainClass = "net.covers1624.devlogin.DevLogin"
-            displayName = "Fabric TestmodClient (:${project.name})"
             sourceSet = "testmod"
         }
 
         create("testmodServer") {
             server()
-            displayName = "Fabric Testmod Server (:${project.name})"
             sourceSet = "testmod"
         }
 
         configureEach {
             runDirectory = project.layout.dir(provider { file("run") })
+            displayName = "Fabric ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }} (:${project.name})"
 
             systemProperties.put("fabric.log.level", "info")
             systemProperties.put("java.net.preferIPv4Stack", "true")

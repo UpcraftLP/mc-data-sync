@@ -91,6 +91,7 @@ neoForge {
 
         register("server") {
             server()
+            programArguments.add("--nogui")
             systemProperty("neoforge.enabledGameTestNamespaces", mod.id)
 
             sourceSet = sourceSets["main"]
@@ -108,6 +109,7 @@ neoForge {
 
         register("testmodServer") {
             server()
+            programArguments.add("--nogui")
             systemProperty("neoforge.enabledGameTestNamespaces", "testmod")
 
             sourceSet = sourceSets["testmod"]
@@ -118,7 +120,7 @@ neoForge {
             logLevel = org.slf4j.event.Level.DEBUG
             systemProperty("forge.logging.markers", "REGISTRIES")
 
-            ideName = "NeoForge ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }}"
+            ideName = "NeoForge ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }} (:${project.name})"
         }
     }
 }

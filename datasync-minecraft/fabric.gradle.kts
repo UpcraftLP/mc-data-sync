@@ -152,8 +152,11 @@ dependencies {
     implementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
 
     findProperty("modmenu_version")?.let {
+        testmodLocalRuntime("com.terraformersmc:modmenu:${it}") {
+            exclude(group = "net.fabricmc")
+        }
         localRuntime("com.terraformersmc:modmenu:${it}") {
-            exclude(group = "net.fabricmc", module = "fabric-api")
+            exclude(group = "net.fabricmc")
         }
     }
 

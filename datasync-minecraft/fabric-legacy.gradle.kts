@@ -157,7 +157,13 @@ dependencies {
     modImplementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
 
     findProperty("modmenu_version")?.let {
-        modLocalRuntime("com.terraformersmc:modmenu:${it}")
+        modLocalRuntime("com.terraformersmc:modmenu:${it}") {
+            exclude(group = "net.fabricmc")
+        }
+        //FIXME does not work
+//        "modTestmodLocalRuntime"("com.terraformersmc:modmenu:${it}") {
+//            exclude(group = "net.fabricmc")
+//        }
     }
 
     // make testmod depend on full fabric API

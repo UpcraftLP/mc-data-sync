@@ -97,7 +97,7 @@ loom {
         }
 
         configureEach {
-            runDirectory = project.layout.dir(provider { file("run") })
+            runDirectory = file("run")
             displayName = "Fabric ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }} (:${project.name})"
 
             systemProperties.put("fabric.log.level", "info")

@@ -1,0 +1,5 @@
+{
+  "net/minecraft/world/entity/player/Player": [
+    "dev/upcraft/datasync/api/ext/DataSyncPlayerExt"
+  ]
+}

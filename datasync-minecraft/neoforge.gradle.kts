@@ -53,13 +53,6 @@ neoForge.version = property("neoforge_version").toString()
 
 stonecutter {
     dependencies["java"] = javaVersion.toString()
-
-    replacements.string(current.parsed >= "1.21.11") {
-        replace("ResourceLocation", "Identifier")
-    }
-    replacements.string(current.parsed < "26.1") {
-        replace("net/minecraft/world/entity/player/Player", "net/minecraft/class_1657")
-    }
 }
 
 sourceSets.create("testmod") {

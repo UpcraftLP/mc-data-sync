@@ -57,13 +57,6 @@ base {
 
 stonecutter {
     dependencies["java"] = javaVersion.toString()
-
-    replacements.string(current.parsed >= "1.21.11") {
-        replace("ResourceLocation", "Identifier")
-    }
-    replacements.string(current.parsed < "26.1") {
-        replace("net/minecraft/world/entity/player/Player", "net/minecraft/class_1657")
-    }
 }
 
 sourceSets.create("testmod") {
@@ -76,6 +69,9 @@ sourceSets.create("testmod") {
 loom {
     val fmjPath = rootProject.file("src/main/resources/fabric.mod.json")
     fabricModJsonPath = sc.process(fmjPath, "build/fabric.mod.json")
+
+    val atPath = rootProject.file("src/main/resources/datasync_minecraft.classtweaker")
+    accessWidenerPath = sc.process(atPath, "build/datasync_minecraft.classtweaker")
 
     runConfigs {
         named("client").configure {
@@ -173,7 +169,7 @@ dependencies {
 tasks.withType<ProcessResources> {
     filteringCharset = "UTF-8"
 
-    exclude("META-INF/*mods.toml")
+    exclude("META-INF/*mods.toml", "*interfaces.json", "*accesstransformer.cfg")
 
     val expandProps = mapOf(
         "version" to version,

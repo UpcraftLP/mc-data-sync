@@ -32,13 +32,9 @@
 				"fabric",
 				"quilt"
 			]
-		},
-		"loom:injected_interfaces": {
-			"net/minecraft/class_1657": [
-				"dev/upcraft/datasync/api/ext/DataSyncPlayerExt"
-			]
 		}
 	},
+	"accessWidener": "datasync_minecraft.classtweaker",
 	"entrypoints": {
 		"main": ["dev.upcraft.datasync.DataSyncMod"],
 		"client": ["dev.upcraft.datasync.client.DataSyncModClient"]

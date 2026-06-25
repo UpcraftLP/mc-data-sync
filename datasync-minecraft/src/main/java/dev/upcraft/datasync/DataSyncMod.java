@@ -1,31 +1,40 @@
 package dev.upcraft.datasync;
 
-import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
-import dev.upcraft.datasync.content.DataStore;
-import dev.upcraft.datasync.net.C2SUpdatePlayerDataPacket;
-import dev.upcraft.datasync.net.S2CUpdatePlayerDataPacket;
+import dev.upcraft.datasync.event.PlayerEventHandler;
 import dev.upcraft.datasync.util.EntitlementsImpl;
-import dev.upcraft.datasync.util.ModHelper;
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
+//?if fabric {
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+//?} elif neoforge {
+/*import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+*///?}
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
 
-public class DataSyncMod implements ModInitializer {
+//? if neoforge {
+/*@Mod(DataSyncMod.MOD_ID)
+@EventBusSubscriber
+*///?}
+public class DataSyncMod /*? if fabric {*/ implements ModInitializer/*?}*/ {
 
     public static final String MOD_ID = "datasync_minecraft";
-    public static final Logger LOGGER = LoggerFactory.getLogger(ModHelper.getMeta(MOD_ID).getName());
+    public static final Logger LOGGER = LoggerFactory.getLogger(DataSyncMod.class);
     public static final boolean HAS_INTERNET = checkInternetAccess();
 
     public static final String API_URL = "https://datasync-api.uuid.gg/api";
@@ -52,24 +61,21 @@ public class DataSyncMod implements ModInitializer {
         //?}
     }
 
+    //?if fabric {
     @Override
     public void onInitialize() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            if (LOGIN_AUTOFETCH) {
-                GameProfile profile = handler.getPlayer().getGameProfile();
-                //? >=1.21.9 {
-                /*var profileId = profile.id();
-                var profileName = profile.name();
-                *///?} else {
-                var profileId = profile.getId();
-                var profileName = profile.getName();
-                //?}
-                DataStore.refresh(profileId, LOGIN_FORCE_REFRESH).thenRunAsync(() -> DataSyncMod.LOGGER.debug("loaded player data for '{}' ({})", profileName, profileId));
-            }
+            PlayerEventHandler.onPlayerJoin(handler.getPlayer());
         });
-        C2SUpdatePlayerDataPacket.register();
-        S2CUpdatePlayerDataPacket.registerServer();
     }
+    //?} elif neoforge {
+    /*@SubscribeEvent
+    public static void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent event) {
+        if(event.getEntity() instanceof ServerPlayer serverPlayer) {
+            PlayerEventHandler.onPlayerJoin(serverPlayer);
+        }
+    }
+    *///?}
 
     private static boolean checkInternetAccess() {
         //? java: >=21 {

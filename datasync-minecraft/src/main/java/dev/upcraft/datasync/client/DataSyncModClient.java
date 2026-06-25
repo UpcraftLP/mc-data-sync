@@ -4,14 +4,24 @@ import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.DataSyncMod;
 import dev.upcraft.datasync.api.util.GameProfileHelper;
 import dev.upcraft.datasync.content.DataStore;
+import net.minecraft.client.Minecraft;
+//? if fabric {
 import dev.upcraft.datasync.net.S2CUpdatePlayerDataPacket;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
+//?} elif neoforge {
+/*import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.common.Mod;
+*///?}
 
+//? if fabric {
 @Environment(EnvType.CLIENT)
 public class DataSyncModClient implements ClientModInitializer {
+//?} elif neoforge {
+/*@Mod(value = DataSyncMod.MOD_ID, dist = Dist.CLIENT)
+public class DataSyncModClient {
+*///?}
 
     public static final SessionStore SESSION_STORE = new SessionStore();
 
@@ -48,8 +58,10 @@ public class DataSyncModClient implements ClientModInitializer {
         *///?}
     }
 
+    //? if fabric {
     @Override
     public void onInitializeClient() {
         S2CUpdatePlayerDataPacket.register();
     }
+    //?}
 }

@@ -1,12 +1,8 @@
-import net.fabricmc.loom.task.LoomTasks
-import org.jetbrains.gradle.ext.runConfigurations
-import org.jetbrains.gradle.ext.settings
 import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("net.fabricmc.fabric-loom-remap") version "1.15.4"
-    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
+    id("net.neoforged.moddev") version "2.0.141"
     id("maven-publish")
 }
 
@@ -54,6 +50,8 @@ base {
     archivesName.set("datasync-minecraft-${stonecutter.current.project}")
 }
 
+neoForge.version = property("neoforge_version").toString()
+
 stonecutter {
     dependencies["java"] = javaVersion.toString()
 
@@ -72,110 +70,64 @@ sourceSets.create("testmod") {
     }
 }
 
-loom {
-    val fmjPath = rootProject.file("src/main/resources/fabric.mod.json")
-    fabricModJsonPath = sc.process(fmjPath, "build/fabric.mod.json")
-
-    runConfigs {
-        named("client") {
-            client()
-            programArgs.addAll(listOf("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient"))
-            mainClass = "net.covers1624.devlogin.DevLogin"
-            configName = "Fabric Client (:${project.name})"
-        }
-
-        named("server") {
-            server()
-            configName = "Fabric Server (:${project.name})"
-        }
-
-        create("testmodClient") {
-            client()
-            programArgs.addAll(listOf("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient"))
-            mainClass = "net.covers1624.devlogin.DevLogin"
-            configName = "Fabric TestmodClient (:${project.name})"
-            source(sourceSets["testmod"])
-        }
-
-        create("testmodServer") {
-            server()
-            configName = "Fabric Testmod Server (:${project.name})"
-            source(sourceSets["testmod"])
-        }
-
-        configureEach {
-            runDir("run")
-
-            property("fabric.log.level", "info")
-            property("java.net.preferIPv4Stack", "true")
-
-            // register as Gradle runs instead of IDEA runs
-            // https://github.com/FabricMC/fabric-loom/issues/1349
-            isIdeConfigGenerated = false
-            rootProject.idea.project.settings.runConfigurations.create<org.jetbrains.gradle.ext.Gradle>(configName) {
-                taskNames = listOf(LoomTasks.getRunConfigTaskName(this@configureEach))
-                setProject(project)
-            }
-        }
-    }
-
+neoForge {
     mods {
-        create("${mod.id}") {
+        register(mod.id) {
             sourceSet(sourceSets["main"])
         }
-
-        create("testmod") {
+        register("testmod") {
             sourceSet(sourceSets["testmod"])
         }
     }
 
-    createRemapConfigurations(sourceSets["testmod"])
-}
+    runs {
+        register("client") {
+            client()
+            devLogin = true
+            systemProperty("neoforge.enabledGameTestNamespaces", mod.id)
 
-repositories {
-    exclusiveContent {
-        forRepository {
-            maven(uri("https://maven.covers1624.net")) {
-                name = "Covers1624"
-            }
+            sourceSet = sourceSets["main"]
+            loadedMods = listOf(mods[mod.id])
         }
-        filter {
-            includeGroup("net.covers1624")
+
+        register("server") {
+            server()
+            systemProperty("neoforge.enabledGameTestNamespaces", mod.id)
+
+            sourceSet = sourceSets["main"]
+            loadedMods = listOf(mods[mod.id])
+        }
+
+        register("testmodClient") {
+            client()
+            devLogin = true
+            systemProperty("neoforge.enabledGameTestNamespaces", "testmod")
+
+            sourceSet = sourceSets["testmod"]
+            loadedMods = listOf(mods[mod.id], mods["testmod"])
+        }
+
+        register("testmodServer") {
+            server()
+            systemProperty("neoforge.enabledGameTestNamespaces", "testmod")
+
+            sourceSet = sourceSets["testmod"]
+            loadedMods = listOf(mods[mod.id], mods["testmod"])
+        }
+
+        configureEach {
+            logLevel = org.slf4j.event.Level.DEBUG
+            systemProperty("forge.logging.markers", "REGISTRIES")
+
+            ideName = "NeoForge ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }}"
         }
     }
-    maven("https://maven.terraformersmc.com/releases")
-}
-
-val testmodLocalRuntime = configurations.dependencyScope("testmodLocalRuntime")
-
-configurations.named("testmodRuntimeClasspath").configure {
-    extendsFrom(testmodLocalRuntime)
-}
-
-dependencies {
-    localRuntime("net.covers1624:DevLogin:0.1.0.5")
-    "testmodLocalRuntime"("net.covers1624:DevLogin:0.1.0.5")
-    // To change the versions see the gradle.properties file
-    minecraft("com.mojang:minecraft:${mod.minecraftVersion}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
-
-    modImplementation(fabricApi.module("fabric-networking-api-v1", property("fabric_version").toString()))
-
-    findProperty("modmenu_version")?.let {
-        modLocalRuntime("com.terraformersmc:modmenu:${it}")
-    }
-
-    // make testmod depend on full fabric API
-    "modTestmodImplementation"("net.fabricmc.fabric-api:fabric-api:${property("fabric_version").toString()}")
-
-    "testmodImplementation"(sourceSets["main"].output)
 }
 
 tasks.withType<ProcessResources> {
     filteringCharset = "UTF-8"
 
-    exclude("META-INF/*mods.toml")
+    exclude("fabric.mod.json", "*.classtweaker")
 
     val expandProps = mapOf(
         "version" to version,
@@ -190,13 +142,17 @@ tasks.withType<ProcessResources> {
         "minecraft_version_range" to mod.minecraftVersionRange,
         "java_version" to javaVersion,
 
-        "fabric_loader_version" to project.property("fabric_loader_version").toString()
+        "neoforge_version" to project.property("neoforge_version").toString()
     )
 
-    filesMatching("fabric.mod.json") {
+    filesMatching(listOf("META-INF/neoforge.mods.toml", "*.mixins.json")) {
         expand(expandProps)
     }
     inputs.properties(expandProps)
+}
+
+tasks.named("createMinecraftArtifacts") {
+    dependsOn("stonecutterGenerate")
 }
 
 tasks.withType<JavaCompile> {

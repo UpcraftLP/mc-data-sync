@@ -1,9 +1,19 @@
 package dev.upcraft.datasync.util;
 
+import dev.upcraft.datasync.DataSyncMod;
+//?if fabric {
+import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.metadata.ModMetadata;
+import net.fabricmc.loader.api.ModContainer;
+//?} elif neoforge {
+/*import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.LoadingModList;
+*///?}
 
-import java.util.NoSuchElementException;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public class ModHelper {
 
@@ -14,10 +24,37 @@ public class ModHelper {
     private static final String FORGE_LOADER_ID = "neoforge";
     //?} else {
     /*private static final String FORGE_LOADER_ID = "forge";
-    *///?}
+     *///?}
 
+    @Nullable
     public static ModMetadata getMeta(String modid) {
-        return FabricLoader.getInstance().getModContainer(modid).orElseThrow(() -> new NoSuchElementException("Unable to find mod container for ID '%s'".formatted(modid))).getMetadata();
+        //? if fabric {
+        var meta = FabricLoader.getInstance().getModContainer(modid).map(ModContainer::getMetadata).orElse(null);
+        return meta != null ? new ModMetadata(meta.getId(), meta.getName(), meta.getVersion().getFriendlyString()) : null;
+        //?} elif neoforge {
+        /*var modlist = ModList.get();
+        if(modlist != null) {
+            for (var mod : modlist.getMods()) {
+                if(modid.equals(mod.getModId())) {
+                    return new ModMetadata(mod.getModId(), mod.getDisplayName(), mod.getVersion().toString());
+                }
+            }
+
+            return null;
+        }
+
+        for (var mod : LoadingModList.get().getMods()) {
+            if(modid.equals(mod.getModId())) {
+                return new ModMetadata(mod.getModId(), mod.getDisplayName(), mod.getVersion().toString());
+            }
+        }
+
+        return null;
+        *///?}
+    }
+
+    public static ModMetadata getSelfMeta() {
+        return Objects.requireNonNull(ModHelper.getMeta(DataSyncMod.MOD_ID), "DataSync not found!");
     }
 
     public static ModMetadata getLoaderMeta() {
@@ -35,10 +72,33 @@ public class ModHelper {
     }
 
     public static ModMetadata getGameMeta() {
-        return getMeta("minecraft");
+        return Objects.requireNonNull(getMeta("minecraft"), "Minecraft not found!");
     }
 
     public static boolean isLoaded(String modid) {
+        //? if fabric {
         return FabricLoader.getInstance().isModLoaded(modid);
+        //?} elif neoforge {
+        /*var modlist = ModList.get();
+        if(modlist != null) {
+            return modlist.isLoaded(modid);
+        }
+
+        for (var mod : LoadingModList.get().getMods()) {
+            if (modid.equals(mod.getModId())) {
+                return true;
+            }
+        }
+
+        return false;
+        *///?}
+    }
+
+    public static boolean isClientEnv() {
+        //? if fabric {
+        return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
+        //?} elif neoforge {
+        /*return FMLLoader.getDist().isClient();
+        *///?}
     }
 }

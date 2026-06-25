@@ -8,9 +8,8 @@ import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.GameProfileHelper;
 import dev.upcraft.datasync.client.DataSyncModClient;
 import dev.upcraft.datasync.net.C2SUpdatePlayerDataPacket;
+import dev.upcraft.datasync.util.ModHelper;
 import dev.upcraft.datasync.web.HttpUtil;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +34,7 @@ public record DataType<T>(Class<T> type, ResourceLocation id, Codec<T> codec) im
 
     @Override
     public CompletableFuture<Void> setData(@Nullable T data) {
-        if (FabricLoader.getInstance().getEnvironmentType() != EnvType.CLIENT) {
+        if (!ModHelper.isClientEnv()) {
             throw new UnsupportedOperationException("Attempted to set player data for %s on a server".formatted(this.id()));
         }
 

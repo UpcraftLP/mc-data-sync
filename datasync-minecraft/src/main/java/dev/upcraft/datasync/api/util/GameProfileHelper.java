@@ -2,8 +2,7 @@ package dev.upcraft.datasync.api.util;
 
 import com.mojang.authlib.GameProfile;
 import dev.upcraft.datasync.client.DataSyncModClient;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
+import dev.upcraft.datasync.util.ModHelper;
 import net.minecraft.core.UUIDUtil;
 
 public class GameProfileHelper {
@@ -26,12 +25,13 @@ public class GameProfileHelper {
         return UUIDUtil.createOfflinePlayerUUID(name).equals(expectedId);
     }
 
-    @Environment(EnvType.CLIENT)
     public static GameProfile getClientProfile() {
+        if(!ModHelper.isClientEnv()) {
+            throw new UnsupportedOperationException("Attempted to call client-only method on server!");
+        }
         return DataSyncModClient.getCurrentPlayerProfile();
     }
 
-    @Environment(EnvType.CLIENT)
     public static boolean isOfflineClientPlayer() {
         return isOfflineProfile(getClientProfile());
     }

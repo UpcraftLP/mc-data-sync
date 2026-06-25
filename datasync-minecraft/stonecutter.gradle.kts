@@ -1,5 +1,6 @@
 plugins {
     id("dev.kikugie.stonecutter")
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
 stonecutter active "1.21.1-fabric" /* [SC] DO NOT EDIT */
 

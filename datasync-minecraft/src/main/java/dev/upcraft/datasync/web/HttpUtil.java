@@ -22,6 +22,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +39,7 @@ public class HttpUtil {
     });
     private static final Supplier<HttpClient> httpClient = Suppliers.memoize(() -> HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).executor(BACKGROUND_EXECUTOR).build());
     private static final Supplier<String> USER_AGENT = Suppliers.memoize(() -> {
-        var meta = ModHelper.getMeta(DataSyncMod.MOD_ID);
+        var meta = ModHelper.getSelfMeta();
         var gameMeta = ModHelper.getGameMeta();
         var loader = buildLoaderUAString();
         String system;
@@ -50,7 +51,7 @@ public class HttpUtil {
             system = String.format("%s;%s", System.getProperty("os.name").replace(' ', '_'), Platform.ARCH);
         }
 
-        return String.format("%s/%s (%s) %s/%s (%s)", meta.getName(), meta.getVersion(), loader, gameMeta.getName(), gameMeta.getVersion(), system);
+        return String.format("%s/%s (%s) %s/%s (%s)", meta.id(), meta.version(), loader, gameMeta.displayName(), gameMeta.version(), system);
     });
 
     public static HttpClient getClient() {
@@ -65,11 +66,11 @@ public class HttpUtil {
         var meta = ModHelper.getLoaderMeta();
 
         var sb = new StringBuilder();
-        sb.append(meta.getName()).append('/').append(meta.getVersion());
-        if(ModHelper.isLoaded("connectormod")) {
+        sb.append(meta.id()).append('/').append(meta.version());
+        var connectorMeta = ModHelper.getMeta("connectormod");
+        if(connectorMeta != null) {
             sb.append("; ");
-            var connectorMeta = ModHelper.getMeta("connectormod");
-            sb.append(connectorMeta.getName()).append('/').append(connectorMeta.getVersion());
+            sb.append(connectorMeta.id()).append('/').append(connectorMeta.version());
         }
 
         return sb.toString();

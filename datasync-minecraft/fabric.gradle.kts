@@ -185,7 +185,7 @@ tasks.withType<ProcessResources> {
         "fabric_loader_version" to project.property("fabric_loader_version").toString()
     )
 
-    filesMatching("fabric.mod.json") {
+    filesMatching(listOf("fabric.mod.json", "*.mixins.json")) {
         expand(expandProps)
     }
     inputs.properties(expandProps)

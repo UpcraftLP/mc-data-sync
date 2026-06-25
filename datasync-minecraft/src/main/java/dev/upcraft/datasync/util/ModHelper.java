@@ -43,7 +43,12 @@ public class ModHelper {
             return null;
         }
 
-        for (var mod : LoadingModList.get().getMods()) {
+        //? if <26.1 {
+        var loadingModList = LoadingModList.get();
+        //?} else {
+        /^var loadingModList = FMLLoader.getCurrent().getLoadingModList();
+        ^///?}
+        for (var mod : loadingModList.getMods()) {
             if(modid.equals(mod.getModId())) {
                 return new ModMetadata(mod.getModId(), mod.getDisplayName(), mod.getVersion().toString());
             }
@@ -84,7 +89,12 @@ public class ModHelper {
             return modlist.isLoaded(modid);
         }
 
-        for (var mod : LoadingModList.get().getMods()) {
+        //? if <26.1 {
+        var loadingModList = LoadingModList.get();
+         //?} else {
+        /^var loadingModList = FMLLoader.getCurrent().getLoadingModList();
+        ^///?}
+        for (var mod : loadingModList.getMods()) {
             if (modid.equals(mod.getModId())) {
                 return true;
             }
@@ -97,8 +107,10 @@ public class ModHelper {
     public static boolean isClientEnv() {
         //? if fabric {
         return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT;
-        //?} elif neoforge {
+        //?} elif neoforge && <26.1 {
         /*return FMLLoader.getDist().isClient();
+        *///?} elif neoforge {
+        /*return FMLLoader.getCurrent().getDist().isClient();
         *///?}
     }
 }

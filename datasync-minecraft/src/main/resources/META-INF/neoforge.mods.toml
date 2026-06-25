@@ -17,8 +17,8 @@ description = '''${mod_description}''' #mandatory (Supports multiline text)
 [[mixins]]
 config = "${mod_id}.mixins.json"
 
-[[mixins]]
-config = "${mod_id}.neoforge.mixins.json"
+#[[mixins]]
+#config = "${mod_id}.neoforge.mixins.json"
 
 # https://docs.neoforged.net/docs/gettingstarted/modfiles#dependency-configurations
 [dependencies]

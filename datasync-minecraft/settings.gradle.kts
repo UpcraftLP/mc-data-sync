@@ -24,6 +24,7 @@ stonecutter {
 		version("1.21.1-neoforge", "1.21.1").buildscript("neoforge-legacy.gradle.kts")
         version("1.21.9-fabric", "1.21.9").buildscript("fabric-legacy.gradle.kts")
         version("26.1-fabric", "26.1").buildscript("fabric.gradle.kts")
+        version("26.1-neoforge", "26.1").buildscript("neoforge.gradle.kts")
 
 		vcsVersion = "1.21.1-fabric"
 	}

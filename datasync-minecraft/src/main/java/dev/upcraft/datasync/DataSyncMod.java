@@ -1,5 +1,6 @@
 package dev.upcraft.datasync;
 
+import com.mojang.logging.LogUtils;
 import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
@@ -7,7 +8,6 @@ import dev.upcraft.datasync.event.PlayerEventHandler;
 import dev.upcraft.datasync.util.EntitlementsImpl;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 //?if fabric {
@@ -34,7 +34,7 @@ import java.net.http.HttpResponse;
 public class DataSyncMod /*? if fabric {*/ implements ModInitializer/*?}*/ {
 
     public static final String MOD_ID = "datasync_minecraft";
-    public static final Logger LOGGER = LoggerFactory.getLogger(DataSyncMod.class);
+    public static final Logger LOGGER = LogUtils.getLogger();
     public static final boolean HAS_INTERNET = checkInternetAccess();
 
     public static final String API_URL = "https://datasync-api.uuid.gg/api";

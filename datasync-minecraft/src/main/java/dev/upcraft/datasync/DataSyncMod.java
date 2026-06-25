@@ -5,6 +5,7 @@ import dev.upcraft.datasync.api.DataSyncAPI;
 import dev.upcraft.datasync.api.SyncToken;
 import dev.upcraft.datasync.api.util.Entitlements;
 import dev.upcraft.datasync.event.PlayerEventHandler;
+import dev.upcraft.datasync.net.S2CUpdatePlayerDataPacket;
 import dev.upcraft.datasync.util.EntitlementsImpl;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
@@ -67,6 +68,7 @@ public class DataSyncMod /*? if fabric {*/ implements ModInitializer/*?}*/ {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             PlayerEventHandler.onPlayerJoin(handler.getPlayer());
         });
+        S2CUpdatePlayerDataPacket.registerServer();
     }
     //?} elif neoforge {
     /*@SubscribeEvent

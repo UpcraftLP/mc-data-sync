@@ -12,7 +12,7 @@
 		"sources": "${sources_url}",
 		"issues": "${issues_url}"
 	},
-	"license": "ARR",
+	"license": "${license_url}",
 	"icon": "icon.png",
 	"environment": "*",
 	"custom": {

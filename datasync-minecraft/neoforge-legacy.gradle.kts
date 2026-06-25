@@ -20,6 +20,7 @@ class ModData {
     val description = property("mod_description").toString()
     val sourcesUrl = property("sources_url").toString()
     val issuesUrl = property("issues_url").toString()
+    val licenseUrl = property("license_url").toString()
     val discordUrl = property("discord_url").toString()
     val homepageUrl = property("homepage_url").toString()
 
@@ -136,6 +137,7 @@ tasks.withType<ProcessResources> {
         "mod_description" to mod.description,
         "sources_url" to mod.sourcesUrl,
         "issues_url" to mod.issuesUrl,
+        "license_url" to mod.licenseUrl,
         "discord_url" to mod.discordUrl,
         "homepage_url" to mod.homepageUrl,
         "minecraft_version" to mod.minecraftVersion,

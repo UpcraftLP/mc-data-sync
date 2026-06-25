@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("net.fabricmc.fabric-loom-remap") version "1.15.4"
+    id("net.fabricmc.fabric-loom-remap") version "1.17.9"
     id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
     id("maven-publish")
 }
@@ -24,6 +24,7 @@ class ModData {
     val description = property("mod_description").toString()
     val sourcesUrl = property("sources_url").toString()
     val issuesUrl = property("issues_url").toString()
+    val licenseUrl = property("license_url").toString()
     val discordUrl = property("discord_url").toString()
     val homepageUrl = property("homepage_url").toString()
 
@@ -77,42 +78,41 @@ loom {
     fabricModJsonPath = sc.process(fmjPath, "build/fabric.mod.json")
 
     runConfigs {
-        named("client") {
+        named("client").configure {
             client()
-            programArgs.addAll(listOf("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient"))
+            programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
             mainClass = "net.covers1624.devlogin.DevLogin"
-            configName = "Fabric Client (:${project.name})"
+            displayName = "Fabric Client (:${project.name})"
         }
 
-        named("server") {
-            server()
-            configName = "Fabric Server (:${project.name})"
+        named("server").configure {
+            displayName = "Fabric Server (:${project.name})"
         }
 
         create("testmodClient") {
             client()
-            programArgs.addAll(listOf("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient"))
+            programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
             mainClass = "net.covers1624.devlogin.DevLogin"
-            configName = "Fabric TestmodClient (:${project.name})"
-            source(sourceSets["testmod"])
+            displayName = "Fabric TestmodClient (:${project.name})"
+            sourceSet = "testmod"
         }
 
         create("testmodServer") {
             server()
-            configName = "Fabric Testmod Server (:${project.name})"
-            source(sourceSets["testmod"])
+            displayName = "Fabric Testmod Server (:${project.name})"
+            sourceSet = "testmod"
         }
 
         configureEach {
-            runDir("run")
+            runDirectory = project.layout.dir(provider { file("run") })
 
-            property("fabric.log.level", "info")
-            property("java.net.preferIPv4Stack", "true")
+            systemProperties.put("fabric.log.level", "info")
+            systemProperties.put("java.net.preferIPv4Stack", "true")
 
             // register as Gradle runs instead of IDEA runs
             // https://github.com/FabricMC/fabric-loom/issues/1349
-            isIdeConfigGenerated = false
-            rootProject.idea.project.settings.runConfigurations.create<org.jetbrains.gradle.ext.Gradle>(configName) {
+            generateRunConfig = false
+            rootProject.idea.project.settings.runConfigurations.create<org.jetbrains.gradle.ext.Gradle>(displayName.get()) {
                 taskNames = listOf(LoomTasks.getRunConfigTaskName(this@configureEach))
                 setProject(project)
             }
@@ -120,7 +120,7 @@ loom {
     }
 
     mods {
-        create("${mod.id}") {
+        create(mod.id) {
             sourceSet(sourceSets["main"])
         }
 
@@ -184,6 +184,7 @@ tasks.withType<ProcessResources> {
         "mod_description" to mod.description,
         "sources_url" to mod.sourcesUrl,
         "issues_url" to mod.issuesUrl,
+        "license_url" to mod.licenseUrl,
         "discord_url" to mod.discordUrl,
         "homepage_url" to mod.homepageUrl,
         "minecraft_version" to mod.minecraftVersion,

@@ -1,12 +1,19 @@
+import net.fabricmc.loom.task.LoomTasks
+import org.jetbrains.gradle.ext.runConfigurations
+import org.jetbrains.gradle.ext.settings
 import java.text.SimpleDateFormat
 import java.util.*
 
 plugins {
-    id("net.fabricmc.fabric-loom") version "1.15.4"
+    id("net.fabricmc.fabric-loom") version "1.17.9"
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
     id("maven-publish")
 }
 
-val javaVersion = 25
+val javaVersion = when {
+//    stonecutter.eval(stonecutter.current.version, ">=26.1") -> 25
+    else -> 25
+}
 
 class ModData {
     val id = property("mod_id").toString()
@@ -15,6 +22,7 @@ class ModData {
     val description = property("mod_description").toString()
     val sourcesUrl = property("sources_url").toString()
     val issuesUrl = property("issues_url").toString()
+    val licenseUrl = property("license_url").toString()
     val discordUrl = property("discord_url").toString()
     val homepageUrl = property("homepage_url").toString()
 
@@ -65,76 +73,82 @@ sourceSets.create("testmod") {
 
 loom {
     runConfigs {
-        configureEach {
-            runDir("run")
-            ideConfigGenerated(true)
-            if (project.hasProperty("mc_java_agent_path")) {
-                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
-            }
-
-            property("fabric.log.level", "info")
-            property("java.net.preferIPv4Stack", "true")
-        }
-
-        "client" {
+        named("client") {
             client()
-            configName = "Fabric Client"
-
-            if (project.hasProperty("mc_uuid")) {
-                programArg("--uuid=${project.findProperty("mc_uuid")}")
-            }
-
-            if (project.hasProperty("mc_username")) {
-                programArg("--username=${project.findProperty("mc_username")}")
-            }
-
-            if (project.hasProperty("mc_java_agent_path")) {
-                vmArg("-javaagent:${project.findProperty("mc_java_agent_path")}")
-            }
+            programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
+            mainClass = "net.covers1624.devlogin.DevLogin"
+            displayName = "Fabric Client (:${project.name})"
         }
 
-        "server" {
+        named("server") {
             server()
-            configName = "Fabric Server"
+            displayName = "Fabric Server (:${project.name})"
         }
 
         create("testmodClient") {
             client()
-            configName = "Fabric Testmod Client"
-            source(sourceSets["testmod"])
-
-            if (project.hasProperty("mc_uuid")) {
-                programArg("--uuid=${project.findProperty("mc_uuid")}")
-            }
-
-            if (project.hasProperty("mc_username")) {
-                programArg("--username=${project.findProperty("mc_username")}")
-            }
+            programArguments.addAll("--launch_target", "net.fabricmc.loader.impl.launch.knot.KnotClient")
+            mainClass = "net.covers1624.devlogin.DevLogin"
+            displayName = "Fabric TestmodClient (:${project.name})"
+            sourceSet = "testmod"
         }
 
         create("testmodServer") {
             server()
-            configName = "Fabric Testmod Server"
-            source(sourceSets["testmod"])
+            displayName = "Fabric Testmod Server (:${project.name})"
+            sourceSet = "testmod"
+        }
+
+        configureEach {
+            runDirectory = project.layout.dir(provider { file("run") })
+
+            systemProperties.put("fabric.log.level", "info")
+            systemProperties.put("java.net.preferIPv4Stack", "true")
+
+            // register as Gradle runs instead of IDEA runs
+            // https://github.com/FabricMC/fabric-loom/issues/1349
+            generateRunConfig = false
+            rootProject.idea.project.settings.runConfigurations.create<org.jetbrains.gradle.ext.Gradle>(displayName.get()) {
+                taskNames = listOf(LoomTasks.getRunConfigTaskName(this@configureEach))
+                setProject(project)
+            }
         }
     }
 
     mods {
-        create("${mod.id}") {
-            sourceSet(sourceSets["main"])
+        create(mod.id) {
+            sourceSet("main")
         }
 
         create("testmod") {
-            sourceSet(sourceSets["testmod"])
+            sourceSet("testmod")
         }
     }
 }
 
 repositories {
+    exclusiveContent {
+        forRepository {
+            maven(uri("https://maven.covers1624.net")) {
+                name = "Covers1624"
+            }
+        }
+        filter {
+            includeGroup("net.covers1624")
+        }
+    }
     maven("https://maven.terraformersmc.com/releases")
 }
 
+val testmodLocalRuntime = configurations.dependencyScope("testmodLocalRuntime")
+
+configurations.named("testmodRuntimeClasspath").configure {
+    extendsFrom(testmodLocalRuntime)
+}
+
 dependencies {
+    localRuntime("net.covers1624:DevLogin:0.1.0.5")
+    "testmodLocalRuntime"("net.covers1624:DevLogin:0.1.0.5")
     // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${mod.minecraftVersion}")
     implementation("net.fabricmc:fabric-loader:${property("fabric_loader_version").toString()}")
@@ -163,6 +177,7 @@ tasks.withType<ProcessResources> {
         "mod_description" to mod.description,
         "sources_url" to mod.sourcesUrl,
         "issues_url" to mod.issuesUrl,
+        "license_url" to mod.licenseUrl,
         "discord_url" to mod.discordUrl,
         "homepage_url" to mod.homepageUrl,
         "minecraft_version" to mod.minecraftVersion,

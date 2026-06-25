@@ -56,7 +56,7 @@ public record C2SUpdatePlayerDataPacket(@Nullable Identifier dataTypeId) impleme
                 DataSyncMod.LOGGER.trace("Relaying sync packet for unknown data type '{}' for player {} ({})", this.dataTypeId(), serverPlayer.getGameProfile().name(), originId);
             }
         }
-        PlayerLookup.all(server).stream().filter(p -> p != serverPlayer).forEach(p -> S2CUpdatePlayerDataPacket.send(p, originId, this.dataTypeId()));
+        PlayerLookup.all(server).stream().filter(p -> !p.getUUID().equals(serverPlayer.getUUID())).forEach(p -> S2CUpdatePlayerDataPacket.send(p, originId, this.dataTypeId()));
     }
 
     private static C2SUpdatePlayerDataPacket fromNetwork(FriendlyByteBuf friendlyByteBuf) {

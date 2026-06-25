@@ -1,0 +1,38 @@
+modLoader = "javafml" #mandatory
+loaderVersion = "*" #mandatory
+license = "${license_url}" # Review your options at https://choosealicense.com/.
+issueTrackerURL = "${issues_url}" #optional
+sourcesUrl = "${sources_url}" # custom property that we parse ourselves
+
+[[mods]] #mandatory
+modId = "${mod_id}" #mandatory
+version = "${version}" #mandatory
+displayName = "${mod_display_name}" #mandatory
+displayURL = "${homepage_url}" #optional (displayed in the mod UI)
+#logoFile = "icon.png" #optional
+#credits = "" #optional
+authors = "Up" #optional
+description = '''${mod_description}''' #mandatory (Supports multiline text)
+
+[[mixins]]
+config = "${mod_id}.mixins.json"
+
+[[mixins]]
+config = "${mod_id}.neoforge.mixins.json"
+
+# https://docs.neoforged.net/docs/gettingstarted/modfiles#dependency-configurations
+[dependencies]
+"${mod_id}" = [
+    { modId = "neoforge", type = "required", versionRange = "[${neoforge_version},)", ordering = "NONE", side = "BOTH" },
+    { modId = "minecraft", type = "required", versionRange = "${minecraft_version_range}", ordering = "NONE", side = "BOTH" },
+]
+
+# Features are specific properties of the game environment, that you may want to declare you require. This example declares
+# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
+# stop your mod loading on the server for example.
+[features.${mod_id}]
+#openGLVersion="[3.2,)"
+javaVersion="[${java_version},)"
+
+[mc-publish]
+loaders = ["neoforge"]

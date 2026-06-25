@@ -44,10 +44,10 @@ public class ModHelper {
         }
 
         //? if <26.1 {
-        var loadingModList = LoadingModList.get();
-        //?} else {
-        /^var loadingModList = FMLLoader.getCurrent().getLoadingModList();
-        ^///?}
+        /^var loadingModList = LoadingModList.get();
+        ^///?} else {
+        var loadingModList = FMLLoader.getCurrent().getLoadingModList();
+        //?}
         for (var mod : loadingModList.getMods()) {
             if(modid.equals(mod.getModId())) {
                 return new ModMetadata(mod.getModId(), mod.getDisplayName(), mod.getVersion().toString());
@@ -90,10 +90,10 @@ public class ModHelper {
         }
 
         //? if <26.1 {
-        var loadingModList = LoadingModList.get();
-         //?} else {
-        /^var loadingModList = FMLLoader.getCurrent().getLoadingModList();
-        ^///?}
+        /^var loadingModList = LoadingModList.get();
+         ^///?} else {
+        var loadingModList = FMLLoader.getCurrent().getLoadingModList();
+        //?}
         for (var mod : loadingModList.getMods()) {
             if (modid.equals(mod.getModId())) {
                 return true;

@@ -63,6 +63,13 @@ sourceSets.create("testmod") {
 }
 
 neoForge {
+    val interfacesPath = rootProject.file("src/main/resources/META-INF/${mod.id}_interfaces.json")
+    interfaceInjectionData {
+        val processed = sc.process(interfacesPath, "build/META-INF/${mod.id}_interfaces.json")
+        from(processed)
+        publish(processed)
+    }
+
     mods {
         register(mod.id) {
             sourceSet(sourceSets["main"])
@@ -116,6 +123,21 @@ neoForge {
             ideName = "NeoForge ${name.replaceFirstChar { it.titlecase(Locale.ROOT) }} (:${project.name})"
         }
     }
+}
+
+repositories {
+
+}
+
+val testmodLocalRuntime = configurations.dependencyScope("testmodLocalRuntime")
+
+configurations.named("testmodRuntimeClasspath").configure {
+    extendsFrom(testmodLocalRuntime)
+}
+
+dependencies {
+    "testmodImplementation"(sourceSets["main"].output)
+    "testmod"
 }
 
 tasks.withType<ProcessResources> {
